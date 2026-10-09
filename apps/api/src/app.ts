@@ -4,6 +4,7 @@ import { errorHandler } from "./middleware/error-handler.js";
 import { AppError } from "./shared/app-error.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
+import { transactionsRouter } from "./modules/transactions/transactions.routes.js";
 
 export function createApp(
   configureRoutes?: (app: Express) => void
@@ -23,6 +24,7 @@ export function createApp(
 
   app.use("/api/auth", authRouter);
   app.use("/api/users", usersRouter);
+  app.use("/api/transactions", transactionsRouter);
 
   if (configureRoutes) {
     configureRoutes(app);
