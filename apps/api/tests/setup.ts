@@ -5,8 +5,10 @@ if (process.env.NODE_ENV && process.env.NODE_ENV !== "test") {
 process.env.NODE_ENV = "test";
 process.env.PORT = "3001";
 
+const userPart = process.env.USER ? `${process.env.USER}@` : "";
 const testDbUrl =
-  process.env.TEST_DATABASE_URL || "postgresql://localhost:5432/ace_test";
+  process.env.TEST_DATABASE_URL ||
+  `postgresql://${userPart}localhost:5432/ace_test`;
 
 const dbName = new URL(testDbUrl).pathname.replace(/^\//, "");
 if (!dbName.endsWith("_test")) {
