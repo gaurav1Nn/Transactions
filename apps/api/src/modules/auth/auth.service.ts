@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { AuthRepository, authRepository } from "./auth.repository.js";
-import { RegisterInput } from "./auth.schemas.js";
-import { hashPassword } from "../../shared/password.js";
+import { RegisterInput, LoginInput } from "./auth.schemas.js";
+import { hashPassword, verifyPassword } from "../../shared/password.js";
 import { signAccessToken } from "../../shared/jwt.js";
 import { AppError } from "../../shared/app-error.js";
 
@@ -74,6 +74,29 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  async login(input: LoginInput): Promise<AuthResponseData> {
+    const normalizedEmail = input.email.trim().toLowerCase();
+
+    const user = await this.repo.findByEmail(normalizedEmail);
+    if (!user) {
+      // Execute dummy timing-safe verification
+      await hashPassword("dummy-salt-constant");
+      throw new AppError("UNAUTHORIZED", "Invalid email or password", 401);
+    }
+
+    const isMatch = await verifyPassword(input.password, user.passwordHash);
+    if (!isMatch) {
+      throw new AppError("UNAUTHORIZED", "Invalid email or password", 401);
+    }
+
+    const accessToken = signAccessToken(user.id);
+
+    return {
+      user: toUserDto(user),
+      accessToken,
+    };
   }
 }
 

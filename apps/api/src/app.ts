@@ -3,6 +3,7 @@ import { requestIdMiddleware } from "./middleware/request-id.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { AppError } from "./shared/app-error.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { usersRouter } from "./modules/users/users.routes.js";
 
 export function createApp(
   configureRoutes?: (app: Express) => void
@@ -21,6 +22,7 @@ export function createApp(
   });
 
   app.use("/api/auth", authRouter);
+  app.use("/api/users", usersRouter);
 
   if (configureRoutes) {
     configureRoutes(app);
