@@ -1,10 +1,11 @@
 import { createApp } from "./app.js";
+import { env } from "./config/env.js";
 
-const port = Number(process.env.PORT) || 3000;
+const port = env.PORT;
 const host = "0.0.0.0";
 
 const app = createApp();
 
 app.listen(port, host, () => {
-  console.log(`Server listening on http://${host}:${port}`);
+  console.log(`Server listening on http://${host}:${port} [${env.NODE_ENV}]`);
 });
