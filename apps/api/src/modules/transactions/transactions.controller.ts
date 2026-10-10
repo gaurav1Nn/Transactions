@@ -69,6 +69,29 @@ export class TransactionsController {
       next(error);
     }
   };
+
+  simulate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user!.id;
+      const id = req.params.id;
+      const { outcome } = req.body;
+
+      const result = await this.service.simulateTransaction(
+        userId,
+        id,
+        outcome
+      );
+      res.status(200).json({
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const transactionsController = new TransactionsController();

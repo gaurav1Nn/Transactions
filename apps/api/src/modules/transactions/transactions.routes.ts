@@ -5,6 +5,7 @@ import {
   createTransactionSchema,
   listTransactionsSchema,
   getTransactionSchema,
+  simulateTransactionSchema,
 } from "./transactions.schemas.js";
 import { transactionsController } from "./transactions.controller.js";
 
@@ -29,4 +30,11 @@ transactionsRouter.get(
   authenticate,
   validate(getTransactionSchema),
   transactionsController.getById
+);
+
+transactionsRouter.post(
+  "/:id/simulate",
+  authenticate,
+  validate(simulateTransactionSchema),
+  transactionsController.simulate
 );

@@ -439,4 +439,161 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(resNonExistent.body.error.message).toBe("Transaction not found");
     });
   });
+
+  describe("POST /api/transactions/:id/simulate - Simulation", () => {
+    it("pending -> success sets status and processedAt", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "sim-success-key")
+        .send({ amount: "50.00", currency: "USD", description: "Success Sim" });
+
+      const txId = createRes.body.data.transactionId;
+
+      const res = await request(app)
+        .post(`/api/transactions/${txId}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "SUCCESS" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("SUCCESS");
+      expect(res.body.data.processedAt).toBeDefined();
+      expect(typeof res.body.data.processedAt).toBe("string");
+      expect(res.body.data.failureReason).toBeNull();
+    });
+
+    it("pending -> failed sets status, processedAt, and safe mock failure reason", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "sim-fail-key")
+        .send({ amount: "25.00", currency: "USD", description: "Fail Sim" });
+
+      const txId = createRes.body.data.transactionId;
+
+      const res = await request(app)
+        .post(`/api/transactions/${txId}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "FAILED" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("FAILED");
+      expect(res.body.data.processedAt).toBeDefined();
+      expect(typeof res.body.data.processedAt).toBe("string");
+      expect(res.body.data.failureReason).toBe("Payment simulation failed");
+    });
+
+    it("invalid outcome returns 422", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "sim-inv-key")
+        .send({ amount: "10.00", currency: "USD", description: "Inv Sim" });
+
+      const txId = createRes.body.data.transactionId;
+
+      const res = await request(app)
+        .post(`/api/transactions/${txId}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "INVALID" });
+
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("another user's transaction returns 404", async () => {
+      const app = createApp();
+
+      const otherRes = await request(app).post("/api/auth/register").send({
+        name: "User Sim B",
+        email: "usersimb@example.com",
+        password: "Password123!",
+      });
+      const otherToken = otherRes.body.data.accessToken;
+
+      const otherTxRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${otherToken}`)
+        .set("Idempotency-Key", "other-sim-key")
+        .send({ amount: "80.00", currency: "USD", description: "B Sim Tx" });
+      const otherTxId = otherTxRes.body.data.transactionId;
+
+      const res = await request(app)
+        .post(`/api/transactions/${otherTxId}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "SUCCESS" });
+
+      expect(res.status).toBe(404);
+      expect(res.body.error.code).toBe("NOT_FOUND");
+      expect(res.body.error.message).toBe("Transaction not found");
+    });
+
+    it("re-simulation returns 409 and preserves original status and timestamp", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "sim-resim-key")
+        .send({ amount: "30.00", currency: "USD", description: "Re-sim Tx" });
+
+      const txId = createRes.body.data.transactionId;
+
+      const firstSim = await request(app)
+        .post(`/api/transactions/${txId}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "SUCCESS" });
+
+      expect(firstSim.status).toBe(200);
+      const originalProcessedAt = firstSim.body.data.processedAt;
+
+      const secondSim = await request(app)
+        .post(`/api/transactions/${txId}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "FAILED" });
+
+      expect(secondSim.status).toBe(409);
+      expect(secondSim.body.error.code).toBe("CONFLICT");
+
+      // Check details to ensure state and processedAt were preserved
+      const detailRes = await request(app)
+        .get(`/api/transactions/${txId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(detailRes.body.data.status).toBe("SUCCESS");
+      expect(detailRes.body.data.processedAt).toBe(originalProcessedAt);
+      expect(detailRes.body.data.failureReason).toBeNull();
+    });
+
+    it("two simultaneous simulation requests result in one terminal transition", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "sim-concurrent-key")
+        .send({ amount: "100.00", currency: "USD", description: "Concurrent Sim" });
+
+      const txId = createRes.body.data.transactionId;
+
+      const [res1, res2] = await Promise.all([
+        request(app)
+          .post(`/api/transactions/${txId}/simulate`)
+          .set("Authorization", `Bearer ${userToken}`)
+          .send({ outcome: "SUCCESS" }),
+        request(app)
+          .post(`/api/transactions/${txId}/simulate`)
+          .set("Authorization", `Bearer ${userToken}`)
+          .send({ outcome: "FAILED" }),
+      ]);
+
+      const statuses = [res1.status, res2.status].sort();
+      expect(statuses).toEqual([200, 409]);
+
+      const detailRes = await request(app)
+        .get(`/api/transactions/${txId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(["SUCCESS", "FAILED"]).toContain(detailRes.body.data.status);
+    });
+  });
 });

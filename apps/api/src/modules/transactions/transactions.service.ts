@@ -151,6 +151,38 @@ export class TransactionsService {
     return toTransactionDto(tx);
   }
 
+  async simulateTransaction(
+    userId: string,
+    id: string,
+    outcome: "SUCCESS" | "FAILED"
+  ): Promise<TransactionDto> {
+    const now = new Date();
+    const failureReason =
+      outcome === "FAILED" ? "Payment simulation failed" : null;
+
+    const count = await this.repo.updatePendingStatus(userId, id, {
+      status: outcome,
+      failureReason,
+      processedAt: now,
+    });
+
+    if (count === 0) {
+      // Distinguish not found/other user from terminal conflict
+      const existing = await this.repo.findOwnedTransaction(userId, id);
+      if (!existing) {
+        throw new AppError("NOT_FOUND", "Transaction not found", 404);
+      }
+      throw new AppError(
+        "CONFLICT",
+        "Transaction has already been processed",
+        409
+      );
+    }
+
+    const updated = await this.repo.findOwnedTransaction(userId, id);
+    return toTransactionDto(updated!);
+  }
+
   private assertIdempotencyMatch(
     existing: Transaction,
     input: CreateTransactionInput

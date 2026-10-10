@@ -49,6 +49,44 @@ export class TransactionsRepository {
       },
     });
   }
+  async updatePendingStatus(
+    userId: string,
+    idOrTransactionId: string,
+    data: {
+      status: TransactionStatus;
+      failureReason: string | null;
+      processedAt: Date;
+    }
+  ): Promise<number> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        idOrTransactionId
+      );
+
+    const conditions: Prisma.TransactionWhereInput[] = [
+      { transactionId: idOrTransactionId },
+    ];
+
+    if (isUuid) {
+      conditions.push({ id: idOrTransactionId });
+    }
+
+    const result = await prisma.transaction.updateMany({
+      where: {
+        userId,
+        OR: conditions,
+        status: TransactionStatus.PENDING,
+      },
+      data: {
+        status: data.status,
+        failureReason: data.failureReason,
+        processedAt: data.processedAt,
+      },
+    });
+
+    return result.count;
+  }
+
 
   async findManyByUserId(
     userId: string,

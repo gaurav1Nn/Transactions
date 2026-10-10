@@ -60,9 +60,23 @@ export const getTransactionSchema = z.object({
   }),
 });
 
+export const simulateTransactionSchema = z.object({
+  params: z.object({
+    id: z.string().trim().min(1, "Transaction ID is required"),
+  }),
+  body: z.object({
+    outcome: z.enum(["SUCCESS", "FAILED"], {
+      errorMap: () => ({ message: "Outcome must be SUCCESS or FAILED" }),
+    }),
+  }),
+});
+
 export type CreateTransactionInput = z.infer<
   typeof createTransactionSchema
 >["body"];
 export type ListTransactionsQuery = z.infer<
   typeof listTransactionsSchema
 >["query"];
+export type SimulateTransactionInput = z.infer<
+  typeof simulateTransactionSchema
+>["body"];
