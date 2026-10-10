@@ -21,6 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#172041",
     },
     package: "com.ace.transactions",
+    permissions: ["INTERNET", "ACCESS_NETWORK_STATE"],
   },
   plugins: ["expo-router", "expo-secure-store"],
   experiments: {
