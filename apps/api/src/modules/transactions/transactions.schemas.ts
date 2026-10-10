@@ -25,7 +25,8 @@ export const createTransactionSchema = z.object({
           return num > 0 && num <= 9999999999.99;
         },
         {
-          message: "Amount must be greater than 0 and less than or equal to 9,999,999,999.99",
+          message:
+            "Amount must be greater than 0 and less than or equal to 9,999,999,999.99",
         }
       ),
     currency: z
@@ -40,4 +41,28 @@ export const createTransactionSchema = z.object({
   }),
 });
 
-export type CreateTransactionInput = z.infer<typeof createTransactionSchema>["body"];
+export const listTransactionsSchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1, "Page must be at least 1").default(1),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1, "Limit must be at least 1")
+      .max(100, "Limit must not exceed 100")
+      .default(20),
+    status: z.enum(["PENDING", "SUCCESS", "FAILED"]).optional(),
+  }),
+});
+
+export const getTransactionSchema = z.object({
+  params: z.object({
+    id: z.string().trim().min(1, "Transaction ID is required"),
+  }),
+});
+
+export type CreateTransactionInput = z.infer<
+  typeof createTransactionSchema
+>["body"];
+export type ListTransactionsQuery = z.infer<
+  typeof listTransactionsSchema
+>["query"];

@@ -276,4 +276,167 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(count).toBe(1);
     });
   });
+
+  describe("GET /api/transactions - History", () => {
+    it("results contain only the authenticated user's records in descending order", async () => {
+      const app = createApp();
+
+      // Register a second user
+      const otherRes = await request(app).post("/api/auth/register").send({
+        name: "Other User",
+        email: "other@example.com",
+        password: "Password123!",
+      });
+      const otherToken = otherRes.body.data.accessToken;
+
+      // Create 2 transactions for primary user
+      await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "user-tx-1")
+        .send({ amount: "10.00", currency: "USD", description: "First Tx" });
+
+      await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "user-tx-2")
+        .send({ amount: "20.00", currency: "USD", description: "Second Tx" });
+
+      // Create 1 transaction for other user
+      await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${otherToken}`)
+        .set("Idempotency-Key", "other-tx-1")
+        .send({ amount: "99.00", currency: "EUR", description: "Other User Tx" });
+
+      // Fetch primary user history
+      const res = await request(app)
+        .get("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.items).toHaveLength(2);
+      expect(res.body.data.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        total: 2,
+        totalPages: 1,
+      });
+
+      // Newest first
+      expect(res.body.data.items[0].description).toBe("Second Tx");
+      expect(res.body.data.items[1].description).toBe("First Tx");
+    });
+
+    it("page, limit, and status filters are validated", async () => {
+      const app = createApp();
+
+      const res1 = await request(app)
+        .get("/api/transactions?page=0")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(res1.status).toBe(422);
+
+      const res2 = await request(app)
+        .get("/api/transactions?limit=101")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(res2.status).toBe(422);
+
+      const res3 = await request(app)
+        .get("/api/transactions?status=INVALID")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(res3.status).toBe(422);
+    });
+
+    it("filters history by status when provided", async () => {
+      const app = createApp();
+
+      await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "filter-test-1")
+        .send({ amount: "15.00", currency: "USD", description: "Filter Tx" });
+
+      const resPending = await request(app)
+        .get("/api/transactions?status=PENDING")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(resPending.status).toBe(200);
+      expect(resPending.body.data.items.length).toBeGreaterThan(0);
+      expect(
+        resPending.body.data.items.every(
+          (tx: { status: string }) => tx.status === "PENDING"
+        )
+      ).toBe(true);
+
+      const resSuccess = await request(app)
+        .get("/api/transactions?status=SUCCESS")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(resSuccess.status).toBe(200);
+      expect(resSuccess.body.data.items).toHaveLength(0);
+    });
+  });
+
+  describe("GET /api/transactions/:id - Details & Ownership", () => {
+    it("owner receives transaction details without internal fields", async () => {
+      const app = createApp();
+
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "details-key-1")
+        .send({ amount: "45.00", currency: "USD", description: "Details Tx" });
+
+      const txId = createRes.body.data.transactionId;
+
+      const res = await request(app)
+        .get(`/api/transactions/${txId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toMatchObject({
+        transactionId: txId,
+        amount: "45.00",
+        currency: "USD",
+        description: "Details Tx",
+        status: "PENDING",
+      });
+      expect(res.body.data).not.toHaveProperty("idempotencyKey");
+      expect(res.body.data).not.toHaveProperty("userId");
+    });
+
+    it("non-existent transaction and another user's transaction both return identical 404", async () => {
+      const app = createApp();
+
+      // Register other user and create a transaction
+      const otherRes = await request(app).post("/api/auth/register").send({
+        name: "User B",
+        email: "userb@example.com",
+        password: "Password123!",
+      });
+      const otherToken = otherRes.body.data.accessToken;
+
+      const otherTxRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${otherToken}`)
+        .set("Idempotency-Key", "b-tx-key")
+        .send({ amount: "70.00", currency: "USD", description: "B's Secret Tx" });
+
+      const bTxId = otherTxRes.body.data.transactionId;
+
+      // User A attempts to read User B's transaction
+      const resOtherUser = await request(app)
+        .get(`/api/transactions/${bTxId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+
+      // User A attempts to read non-existent transaction
+      const resNonExistent = await request(app)
+        .get("/api/transactions/TXN-NONEXISTENT-999")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(resOtherUser.status).toBe(404);
+      expect(resNonExistent.status).toBe(404);
+      expect(resOtherUser.body.error.code).toBe("NOT_FOUND");
+      expect(resNonExistent.body.error.code).toBe("NOT_FOUND");
+      expect(resOtherUser.body.error.message).toBe("Transaction not found");
+      expect(resNonExistent.body.error.message).toBe("Transaction not found");
+    });
+  });
 });

@@ -3,7 +3,10 @@ import {
   TransactionsRepository,
   transactionsRepository,
 } from "./transactions.repository.js";
-import { CreateTransactionInput } from "./transactions.schemas.js";
+import {
+  CreateTransactionInput,
+  ListTransactionsQuery,
+} from "./transactions.schemas.js";
 import { generateTransactionId } from "../../shared/transaction-id.js";
 import { AppError } from "../../shared/app-error.js";
 
@@ -20,6 +23,16 @@ export interface TransactionDto {
   processedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PaginatedTransactions {
+  items: TransactionDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export function toTransactionDto(tx: Transaction): TransactionDto {
@@ -82,7 +95,6 @@ export class TransactionsService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        // Handle concurrent race: load winning row
         const winner = await this.repo.findByIdempotencyKey(
           userId,
           idempotencyKey
@@ -97,6 +109,46 @@ export class TransactionsService {
       }
       throw error;
     }
+  }
+
+  async listTransactions(
+    userId: string,
+    query: ListTransactionsQuery
+  ): Promise<PaginatedTransactions> {
+    const page = query.page;
+    const limit = query.limit;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.repo.findManyByUserId(userId, {
+      skip,
+      take: limit,
+      status: query.status,
+    });
+
+    const totalPages = Math.ceil(total / limit) || (total === 0 ? 0 : 1);
+
+    return {
+      items: items.map(toTransactionDto),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  async getTransaction(
+    userId: string,
+    id: string
+  ): Promise<TransactionDto> {
+    const tx = await this.repo.findOwnedTransaction(userId, id);
+
+    if (!tx) {
+      throw new AppError("NOT_FOUND", "Transaction not found", 404);
+    }
+
+    return toTransactionDto(tx);
   }
 
   private assertIdempotencyMatch(
