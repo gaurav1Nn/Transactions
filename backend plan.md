@@ -320,27 +320,27 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: None.
 - Produces: `createApp(): Express` from `app.ts`; a server entry point that listens on validated `PORT`; `GET /health` returning `{ data: { status: "ok" } }`.
 
-- [ ] **Step 1: Write the failing health integration test**
+- [x] **Step 1: Write the failing health integration test**
   - Test name: `GET /health returns API readiness without authentication`.
   - Assert status `200`, JSON content type, and `{ data: { status: "ok" } }`.
 
-- [ ] **Step 2: Run the focused test and confirm failure**
+- [x] **Step 2: Run the focused test and confirm failure**
   - Run: `npm test --workspace @ace/api -- health.integration.test.ts`
   - Expected: FAIL because `createApp` or the route does not exist.
 
-- [ ] **Step 3: Add the minimum Express application and server entry point**
+- [x] **Step 3: Add the minimum Express application and server entry point**
   - `createApp(): Express` registers JSON parsing and `/health`.
   - `server.ts` listens on `0.0.0.0` and `process.env.PORT`.
 
-- [ ] **Step 4: Run focused verification**
+- [x] **Step 4: Run focused verification**
   - Run: `npm test --workspace @ace/api -- health.integration.test.ts`
   - Expected: PASS.
 
-- [ ] **Step 5: Run structural checks**
+- [x] **Step 5: Run structural checks**
   - Run: `npm run typecheck --workspace @ace/api && npm run build --workspace @ace/api`
   - Expected: Both commands exit `0`.
 
-- [ ] **Step 6: Commit the accepted task**
+- [x] **Step 6: Commit the accepted task**
   - Commit message: `feat(api): scaffold Express health service`
 
 ### Task 2: Add validated configuration and test infrastructure
@@ -358,28 +358,28 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: `createApp()` from Task 1.
 - Produces: `env` object with `NODE_ENV`, `PORT`, `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, and `CORS_ORIGINS`; isolated integration-test setup.
 
-- [ ] **Step 1: Write tests for missing and malformed configuration**
+- [x] **Step 1: Write tests for missing and malformed configuration**
   - Test name: `parseEnv rejects missing production secrets`.
   - Test name: `parseEnv applies safe development defaults only where allowed`.
 
-- [ ] **Step 2: Confirm both tests fail before implementation**
+- [x] **Step 2: Confirm both tests fail before implementation**
   - Run: `npm test --workspace @ace/api -- env.test.ts`
   - Expected: FAIL because `parseEnv` does not exist.
 
-- [ ] **Step 3: Implement `parseEnv(input: NodeJS.ProcessEnv): Env`**
+- [x] **Step 3: Implement `parseEnv(input: NodeJS.ProcessEnv): Env`**
   - Use Zod.
   - Never print secret values in validation output.
   - Fail startup immediately when required values are invalid.
 
-- [ ] **Step 4: Configure Vitest and the dedicated test environment**
+- [x] **Step 4: Configure Vitest and the dedicated test environment**
   - The test database URL must be different from any production URL.
   - Test setup must refuse to run destructive cleanup when `NODE_ENV !== "test"`.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - Run: `npm test --workspace @ace/api -- env.test.ts && npm run typecheck --workspace @ace/api`
   - Expected: Tests pass and typecheck exits `0`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `chore(api): validate runtime configuration`
 
 ### Task 3: Define and migrate the PostgreSQL schema
@@ -396,31 +396,31 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: `DATABASE_URL` from Task 2.
 - Produces: Prisma `User`, `Transaction`, and `TransactionStatus`; shared `prisma` client.
 
-- [ ] **Step 1: Write schema assertions or an integration test describing required constraints**
+- [x] **Step 1: Write schema assertions or an integration test describing required constraints**
   - Assert duplicate normalized email is rejected.
   - Assert duplicate `(userId, idempotencyKey)` is rejected.
   - Assert `transactionId` is unique.
 
-- [ ] **Step 2: Confirm schema verification cannot yet pass**
+- [x] **Step 2: Confirm schema verification cannot yet pass**
   - Run: `npm run prisma:validate --workspace @ace/api`
   - Expected: FAIL because no Prisma schema exists.
 
-- [ ] **Step 3: Create the exact models and enum from Section 3**
+- [x] **Step 3: Create the exact models and enum from Section 3**
   - Use UUID primary keys.
   - Map amount to Decimal/`NUMERIC(12,2)`.
   - Add the required unique keys, foreign key, and history index.
 
-- [ ] **Step 4: Generate and inspect the migration**
+- [x] **Step 4: Generate and inspect the migration**
   - Run: `npm run prisma:migrate:dev --workspace @ace/api -- --name initial_schema`
   - Expected: Migration applies to the development database.
   - Manually confirm the SQL contains all required constraints and no destructive statement unrelated to these models.
 
-- [ ] **Step 5: Verify from a clean test database**
+- [x] **Step 5: Verify from a clean test database**
   - Safety: first confirm `DATABASE_URL` points to this project's dedicated local database (name ends in `_test`, password redacted when printed). Abort if it does not. See "Project isolation and safety rules" in `plan.md`.
   - Run: `npm run prisma:migrate:reset --workspace @ace/api -- --force && npm test --workspace @ace/api -- schema.integration.test.ts`
   - Expected: Migration and constraint tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `feat(api): add PostgreSQL user and transaction schema`
 
 ### Task 4: Establish request IDs, validation, and structured errors
@@ -438,30 +438,30 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: Express app from Task 1.
 - Produces: `AppError`, `requestIdMiddleware`, `validate(schema)`, `errorHandler`, and the stable `ApiErrorResponse` envelope.
 
-- [ ] **Step 1: Write failing error-contract tests**
+- [x] **Step 1: Write failing error-contract tests**
   - Invalid body returns `422` with field details and request ID.
   - Unknown route returns structured `404`.
   - Unexpected error returns safe `500` without stack or database details.
 
-- [ ] **Step 2: Confirm failure**
+- [x] **Step 2: Confirm failure**
   - Run: `npm test --workspace @ace/api -- errors.integration.test.ts`
   - Expected: FAIL because middleware is absent.
 
-- [ ] **Step 3: Implement one middleware at a time**
+- [x] **Step 3: Implement one middleware at a time**
   - `requestIdMiddleware` accepts a valid inbound request ID or generates one.
   - `validate` stores parsed values for downstream handlers.
   - `errorHandler` translates known and unknown errors.
 
-- [ ] **Step 4: Register middleware in correct Express order**
+- [x] **Step 4: Register middleware in correct Express order**
   - Request ID before routes.
   - Not-found handling after routes.
   - Error middleware last.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - Run: `npm test --workspace @ace/api -- errors.integration.test.ts && npm run typecheck --workspace @ace/api`
   - Expected: All checks pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `feat(api): standardize validation and errors`
 
 ### Task 5: Implement password and JWT security primitives
@@ -478,26 +478,26 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: `env.JWT_SECRET`, `env.JWT_EXPIRES_IN`, and `env.BCRYPT_ROUNDS`.
 - Produces: `hashPassword(password: string): Promise<string>`, `verifyPassword(password: string, hash: string): Promise<boolean>`, `signAccessToken(userId: string): string`, and `verifyAccessToken(token: string): { sub: string }`.
 
-- [ ] **Step 1: Write failing password tests**
+- [x] **Step 1: Write failing password tests**
   - Hash differs from plaintext.
   - Correct password verifies; incorrect password does not.
 
-- [ ] **Step 2: Write failing JWT tests**
+- [x] **Step 2: Write failing JWT tests**
   - Valid signed token returns the original subject.
   - Altered and expired tokens are rejected.
 
-- [ ] **Step 3: Run focused tests and confirm expected failure**
+- [x] **Step 3: Run focused tests and confirm expected failure**
   - Run: `npm test --workspace @ace/api -- password.test.ts jwt.test.ts`
 
-- [ ] **Step 4: Implement the four exact interfaces**
+- [x] **Step 4: Implement the four exact interfaces**
   - Keep algorithm settings in validated configuration.
   - Do not log inputs or token contents.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - Run: `npm test --workspace @ace/api -- password.test.ts jwt.test.ts`
   - Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `feat(api): add password and JWT security helpers`
 
 ### Task 6: Implement user registration
@@ -515,28 +515,28 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: Prisma client, password/JWT helpers, error types, validation middleware.
 - Produces: `register(input: RegisterInput): Promise<AuthResponse["data"]`; normalized unique users and safe auth responses.
 
-- [ ] **Step 1: Add failing registration integration tests**
+- [x] **Step 1: Add failing registration integration tests**
   - Valid request returns `201`, safe user fields, and JWT.
   - Stored password differs from plaintext.
   - Upper/lowercase duplicate email returns `409`.
   - Invalid email, short password, blank name, and oversized inputs return `422`.
 
-- [ ] **Step 2: Confirm tests fail for missing route**
+- [x] **Step 2: Confirm tests fail for missing route**
   - Run: `npm test --workspace @ace/api -- auth.integration.test.ts -t register`
 
-- [ ] **Step 3: Implement schema, repository, and `register` service**
+- [x] **Step 3: Implement schema, repository, and `register` service**
   - Normalize email with trim and lowercase before checking/inserting.
   - Handle the database unique violation safely to cover races.
   - Map only `UserDto` fields.
 
-- [ ] **Step 4: Add controller and route wiring**
+- [x] **Step 4: Add controller and route wiring**
   - Route: `POST /api/auth/register`.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - Run: `npm test --workspace @ace/api -- auth.integration.test.ts -t register`
   - Expected: All registration scenarios pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `feat(api): implement user registration`
 
 ### Task 7: Implement login, authentication middleware, and profile
@@ -554,30 +554,30 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: auth repository, password/JWT helpers, `UserDto` mapper.
 - Produces: `login(input: LoginInput): Promise<AuthResponse["data"]`; authenticated `req.user.id`; `getCurrentUser(userId: string): Promise<UserDto>`.
 
-- [ ] **Step 1: Add failing login tests**
+- [x] **Step 1: Add failing login tests**
   - Valid credentials return `200` and a usable JWT.
   - Unknown email and wrong password both return the same generic `401` shape.
 
-- [ ] **Step 2: Add failing authentication/profile tests**
+- [x] **Step 2: Add failing authentication/profile tests**
   - Valid Bearer token returns own profile.
   - Missing, malformed, altered, and expired tokens return `401`.
   - Profile never contains `passwordHash`.
 
-- [ ] **Step 3: Run and confirm failures**
+- [x] **Step 3: Run and confirm failures**
   - Run: `npm test --workspace @ace/api -- auth.integration.test.ts`
 
-- [ ] **Step 4: Implement login and middleware**
+- [x] **Step 4: Implement login and middleware**
   - `authenticate` verifies the token and attaches only the verified subject.
   - Use timing-safe bcrypt verification through the shared helper.
 
-- [ ] **Step 5: Implement `GET /api/users/me`**
+- [x] **Step 5: Implement `GET /api/users/me`**
   - Fetch by authenticated subject and map to `UserDto`.
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
   - Run: `npm test --workspace @ace/api -- auth.integration.test.ts`
   - Expected: All authentication/profile tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
   - Commit message: `feat(api): add login authentication and profile`
 
 ### Task 8: Implement transaction creation and idempotency
@@ -595,34 +595,34 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: authenticated `userId`, Prisma transaction model, error/validation infrastructure.
 - Produces: `createTransaction(userId: string, idempotencyKey: string, input: CreateTransactionInput): Promise<{ transaction: TransactionDto; created: boolean }>` and `POST /api/transactions`.
 
-- [ ] **Step 1: Add failing creation tests**
+- [x] **Step 1: Add failing creation tests**
   - Valid request returns `201`, server-generated ID, and `PENDING`.
   - Missing/invalid idempotency header returns `422`.
   - Zero, negative, over-precision, oversized, malformed currency, and blank description inputs return `422`.
   - Decimal `0.10` round-trips as `"0.10"`.
 
-- [ ] **Step 2: Add failing idempotency tests**
+- [x] **Step 2: Add failing idempotency tests**
   - Exact replay returns `200` and the original transaction.
   - Replay with changed payload returns `409`.
   - Parallel same-key requests create exactly one row.
 
-- [ ] **Step 3: Run and confirm failure**
+- [x] **Step 3: Run and confirm failure**
   - Run: `npm test --workspace @ace/api -- transactions.integration.test.ts -t create`
 
-- [ ] **Step 4: Implement schemas and repository primitives**
+- [x] **Step 4: Implement schemas and repository primitives**
   - Generate public transaction ID on the server.
   - Compare canonical amount, currency, and description for replay equality.
   - Catch the composite unique race and load the winning record.
 
-- [ ] **Step 5: Implement service and route**
+- [x] **Step 5: Implement service and route**
   - Never accept `userId`, `status`, or `transactionId` from the body.
   - Map Decimal to a fixed two-decimal response string.
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
   - Run: `npm test --workspace @ace/api -- transactions.integration.test.ts -t create`
   - Expected: All creation and review-focus idempotency cases pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
   - Commit message: `feat(api): create idempotent transactions`
 
 ### Task 9: Implement owner-only history and details
@@ -640,31 +640,31 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: transaction mapper and authenticated user ID from Task 8.
 - Produces: `listTransactions(userId: string, query: TransactionListQuery): Promise<PaginatedTransactions>` and `getTransaction(userId: string, transactionId: string): Promise<TransactionDto>`.
 
-- [ ] **Step 1: Add failing history tests**
+- [x] **Step 1: Add failing history tests**
   - Results contain only the authenticated user's records.
   - Newest transaction appears first.
   - `page`, `limit`, and optional `status` are validated.
   - Pagination metadata matches total records.
 
-- [ ] **Step 2: Add failing details/ownership tests**
+- [x] **Step 2: Add failing details/ownership tests**
   - Owner receives the transaction.
   - Missing ID and another user's ID both return identical `404` responses.
   - No response leaks internal database `idempotencyKey` or `userId` unless deliberately included in the public DTO contract.
 
-- [ ] **Step 3: Run and confirm failures**
+- [x] **Step 3: Run and confirm failures**
   - Run: `npm test --workspace @ace/api -- transactions.integration.test.ts -t 'history|details|ownership'`
 
-- [ ] **Step 4: Implement ownership-aware repository queries and services**
+- [x] **Step 4: Implement ownership-aware repository queries and services**
   - Include `userId` in database selection predicates where practical.
   - Default `page=1`, `limit=20`; cap the maximum limit.
 
-- [ ] **Step 5: Wire `GET /api/transactions` and `GET /api/transactions/:id`**
+- [x] **Step 5: Wire `GET /api/transactions` and `GET /api/transactions/:id`**
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
   - Run: `npm test --workspace @ace/api -- transactions.integration.test.ts`
   - Expected: Creation, history, details, and ownership tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
   - Commit message: `feat(api): add owner-only transaction queries`
 
 ### Task 10: Implement deterministic mock payment simulation
@@ -682,7 +682,7 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: `getTransaction` ownership rules and transaction status enum.
 - Produces: `simulateTransaction(userId: string, transactionId: string, outcome: "SUCCESS" | "FAILED"): Promise<TransactionDto>` and the required simulation endpoint.
 
-- [ ] **Step 1: Add failing simulation tests**
+- [x] **Step 1: Add failing simulation tests**
   - Pending → success sets status and `processedAt`.
   - Pending → failed sets status, `processedAt`, and safe mock failure reason.
   - Invalid outcome returns `422`.
@@ -690,20 +690,20 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
   - Re-simulation returns `409` and preserves original status/timestamp.
   - Two simultaneous simulation requests result in one terminal transition.
 
-- [ ] **Step 2: Confirm failures**
+- [x] **Step 2: Confirm failures**
   - Run: `npm test --workspace @ace/api -- transactions.integration.test.ts -t simulate`
 
-- [ ] **Step 3: Implement an atomic conditional update**
+- [x] **Step 3: Implement an atomic conditional update**
   - Update only a row matching owner, public ID, and `PENDING` status.
   - If zero rows update, distinguish not-found/ownership from terminal conflict without exposing another user's record.
 
-- [ ] **Step 4: Wire `POST /api/transactions/:id/simulate`**
+- [x] **Step 4: Wire `POST /api/transactions/:id/simulate`**
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - Run: `npm test --workspace @ace/api -- transactions.integration.test.ts -t simulate`
   - Expected: All status, ownership, and concurrency checks pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `feat(api): simulate terminal transaction results`
 
 ### Task 11: Add backend hardening and operational logging
@@ -721,25 +721,25 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: request IDs, error middleware, route tree, validated configuration.
 - Produces: secure headers, size limits, controlled CORS, auth rate limits, and redacted structured logs.
 
-- [ ] **Step 1: Write failing security tests**
+- [x] **Step 1: Write failing security tests**
   - Security headers exist.
   - Oversized body is rejected.
   - repeated login abuse eventually returns `429` in an isolated rate-limit test.
   - Production `500` contains no stack, SQL, password, JWT, or database URL.
 
-- [ ] **Step 2: Confirm failures**
+- [x] **Step 2: Confirm failures**
   - Run: `npm test --workspace @ace/api -- security.integration.test.ts`
 
-- [ ] **Step 3: Configure Helmet, CORS, body limits, rate limits, and Pino redaction**
+- [x] **Step 3: Configure Helmet, CORS, body limits, rate limits, and Pino redaction**
   - Redact authorization headers, passwords, tokens, and database configuration.
   - Avoid rate-limit interference between unrelated tests.
 
-- [ ] **Step 4: Verify focused and full suites**
+- [x] **Step 4: Verify focused and full suites**
   - Run: `npm test --workspace @ace/api -- security.integration.test.ts`
   - Run: `npm test --workspace @ace/api`
   - Expected: All tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   - Commit message: `feat(api): harden HTTP service and logging`
 
 ### Task 12: Finalize API documentation and Postman coverage
@@ -756,20 +756,20 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: frozen endpoints and response contracts from Tasks 6–11.
 - Produces: runnable Postman workflow and human-readable API reference.
 
-- [ ] **Step 1: Create collection folders for Health, Auth, Users, and Transactions**
+- [x] **Step 1: Create collection folders for Health, Auth, Users, and Transactions**
 
-- [ ] **Step 2: Add scripts that capture `accessToken` and `transactionId`**
+- [x] **Step 2: Add scripts that capture `accessToken` and `transactionId`**
   - Never store a real token in the committed collection/environment.
 
-- [ ] **Step 3: Add assertions for status, response shape, and ownership/error cases**
+- [x] **Step 3: Add assertions for status, response shape, and ownership/error cases**
 
-- [ ] **Step 4: Run the collection against local API**
+- [x] **Step 4: Run the collection against local API**
   - Run: `npx newman run postman/ACE-Transactions.postman_collection.json -e postman/local.postman_environment.example.json`
   - Expected: All requests and assertions pass with a configured local environment.
 
-- [ ] **Step 5: Review docs against every required endpoint**
+- [x] **Step 5: Review docs against every required endpoint**
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   - Commit message: `docs(api): add Postman collection and API guide`
 
 ### Task 13: Containerize and deploy to Google Cloud
@@ -787,38 +787,38 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: production build, Prisma migration, validated environment, health endpoint.
 - Produces: production container and documented Cloud Run HTTPS URL.
 
-- [ ] **Step 1: Write a container smoke-test checklist before the Dockerfile**
+- [x] **Step 1: Write a container smoke-test checklist before the Dockerfile**
   - Container must start with `PORT`, bind `0.0.0.0`, answer `/health`, and stop cleanly.
 
-- [ ] **Step 2: Create a multi-stage production Dockerfile**
+- [x] **Step 2: Create a multi-stage production Dockerfile**
   - Include generated Prisma client and compiled JavaScript.
   - Exclude source secrets, test artifacts, and development watcher.
   - Prefer a non-root runtime user.
 
-- [ ] **Step 3: Build and run locally**
+- [x] **Step 3: Build and run locally**
   - Run: `docker build -f apps/api/Dockerfile -t ace-transactions-api .`
   - Run the image with explicit safe local environment values.
   - Expected: `/health` returns `200`.
 
-- [ ] **Step 4: Provision/configure GCP with human-approved project, region, and cost settings**
+- [x] **Step 4: Provision/configure GCP with human-approved project, region, and cost settings**
   - Artifact Registry.
   - Cloud SQL PostgreSQL database/user.
   - Secret Manager values.
   - Least-privilege Cloud Run runtime identity.
 
-- [ ] **Step 5: Apply migrations through a controlled Cloud Run job or approved one-off migration step**
+- [x] **Step 5: Apply migrations through a controlled Cloud Run job or approved one-off migration step**
   - Never run development migration generation in production.
 
-- [ ] **Step 6: Deploy Cloud Run with Cloud SQL connection and secrets**
+- [x] **Step 6: Deploy Cloud Run with Cloud SQL connection and secrets**
 
-- [ ] **Step 7: Verify production independently**
+- [x] **Step 7: Verify production independently**
   - Stop the local API.
   - Request production `/health`.
   - Run Newman/Postman against the Cloud Run URL.
   - Confirm created records persist in Cloud SQL.
   - Confirm logs contain request IDs and no secrets.
 
-- [ ] **Step 8: Commit deployment artifacts and documentation only**
+- [x] **Step 8: Commit deployment artifacts and documentation only**
   - Commit message: `deploy(api): document Cloud Run and Cloud SQL release`
 
 ### Task 14: Execute the backend release gate
@@ -833,29 +833,29 @@ Do not ask one reviewer to perform both reviews at the same time. Specification 
 - Consumes: all backend tasks.
 - Produces: signed-off production API contract and URL for frontend work.
 
-- [ ] **Step 1: Apply migrations to a clean test database**
+- [x] **Step 1: Apply migrations to a clean test database**
   - Expected: no error and expected tables/constraints exist.
 
-- [ ] **Step 2: Run all local quality commands**
+- [x] **Step 2: Run all local quality commands**
   - `npm run lint --workspace @ace/api`
   - `npm run typecheck --workspace @ace/api`
   - `npm test --workspace @ace/api`
   - `npm run build --workspace @ace/api`
   - Expected: every command exits `0`; test output shows zero failures.
 
-- [ ] **Step 3: Run the production Postman collection with local backend stopped**
+- [x] **Step 3: Run the production Postman collection with local backend stopped**
   - Expected: all required endpoints and negative tests pass.
 
-- [ ] **Step 4: Manually verify the five Review Focus conditions**
+- [x] **Step 4: Manually verify the five Review Focus conditions**
   - Link each condition to its automated test output.
 
-- [ ] **Step 5: Perform secret and artifact review**
+- [x] **Step 5: Perform secret and artifact review**
   - Confirm no `.env`, tokens, service-account JSON, database URLs, or passwords are tracked.
 
-- [ ] **Step 6: Freeze the frontend contract**
+- [x] **Step 6: Freeze the frontend contract**
   - Record production base URL, DTOs, status values, error envelope, and Postman collection version.
 
-- [ ] **Step 7: Mark backend ready only with fresh evidence**
+- [x] **Step 7: Mark backend ready only with fresh evidence**
   - Commit message: `chore(api): record backend release verification`
 
 ---
