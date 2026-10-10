@@ -30,6 +30,19 @@ describe("Request ID, Validation & Error Handling", () => {
     expect(res.headers["x-request-id"]).toBe(customId);
   });
 
+  it("replaces invalid or unsafe inbound X-Request-ID with a valid UUID", async () => {
+    const unsafeId = "bad-id-with-invalid-chars!@#$%^&*()";
+    const app = createApp();
+    const res = await request(app)
+      .get("/health")
+      .set("X-Request-ID", unsafeId);
+    expect(res.status).toBe(200);
+    expect(res.headers["x-request-id"]).not.toBe(unsafeId);
+    expect(res.headers["x-request-id"]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    );
+  });
+
   it("validation middleware returns 422 with field details on invalid body", async () => {
     const testSchema = z.object({
       body: z.object({

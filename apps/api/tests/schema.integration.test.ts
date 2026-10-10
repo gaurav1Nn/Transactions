@@ -109,4 +109,81 @@ describe("Database Schema & Constraints", () => {
       })
     ).rejects.toThrow();
   });
+
+  it("allows different users to use the same idempotencyKey", async () => {
+    const user1 = await prisma.user.create({
+      data: {
+        name: "User One",
+        email: "user1.idemp@example.com",
+        passwordHash: "hash1",
+      },
+    });
+
+    const user2 = await prisma.user.create({
+      data: {
+        name: "User Two",
+        email: "user2.idemp@example.com",
+        passwordHash: "hash2",
+      },
+    });
+
+    const sharedKey = "shared-client-key-100";
+
+    const tx1 = await prisma.transaction.create({
+      data: {
+        transactionId: "TXN-SHARED-1",
+        userId: user1.id,
+        idempotencyKey: sharedKey,
+        amount: "50.00",
+        currency: "USD",
+        description: "User 1 tx",
+        status: "PENDING",
+      },
+    });
+
+    const tx2 = await prisma.transaction.create({
+      data: {
+        transactionId: "TXN-SHARED-2",
+        userId: user2.id,
+        idempotencyKey: sharedKey,
+        amount: "50.00",
+        currency: "USD",
+        description: "User 2 tx",
+        status: "PENDING",
+      },
+    });
+
+    expect(tx1.idempotencyKey).toBe(sharedKey);
+    expect(tx2.idempotencyKey).toBe(sharedKey);
+    expect(tx1.userId).not.toBe(tx2.userId);
+  });
+
+  it("cascades delete from user to transactions", async () => {
+    const user = await prisma.user.create({
+      data: {
+        name: "Cascade User",
+        email: "cascade@example.com",
+        passwordHash: "hash",
+      },
+    });
+
+    await prisma.transaction.create({
+      data: {
+        transactionId: "TXN-CASCADE-1",
+        userId: user.id,
+        idempotencyKey: "cascade-key-1",
+        amount: "25.00",
+        currency: "USD",
+        description: "Cascade tx",
+        status: "PENDING",
+      },
+    });
+
+    await prisma.user.delete({ where: { id: user.id } });
+
+    const remaining = await prisma.transaction.findMany({
+      where: { userId: user.id },
+    });
+    expect(remaining).toHaveLength(0);
+  });
 });

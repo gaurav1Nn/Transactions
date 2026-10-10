@@ -275,6 +275,38 @@ describe("Transactions API - Creation & Idempotency", () => {
       });
       expect(count).toBe(1);
     });
+
+    it("different users using the same idempotency key both create distinct transactions", async () => {
+      const app = createApp();
+
+      // Register user B
+      const userBRes = await request(app).post("/api/auth/register").send({
+        name: "User B Idemp",
+        email: "userb.idemp@example.com",
+        password: "Password123!",
+      });
+      const userBToken = userBRes.body.data.accessToken;
+
+      const sharedKey = "shared-idempotency-key-xyz";
+
+      const resA = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", sharedKey)
+        .send({ amount: "40.00", currency: "USD", description: "User A tx" });
+
+      const resB = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userBToken}`)
+        .set("Idempotency-Key", sharedKey)
+        .send({ amount: "80.00", currency: "EUR", description: "User B tx" });
+
+      expect(resA.status).toBe(201);
+      expect(resB.status).toBe(201);
+      expect(resA.body.data.transactionId).not.toBe(resB.body.data.transactionId);
+      expect(resA.body.data.amount).toBe("40.00");
+      expect(resB.body.data.amount).toBe("80.00");
+    });
   });
 
   describe("GET /api/transactions - History", () => {
@@ -373,6 +405,42 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(resSuccess.status).toBe(200);
       expect(resSuccess.body.data.items).toHaveLength(0);
     });
+
+    it("empty history returns zero totals and empty items array", async () => {
+      const app = createApp();
+      // user has no transactions yet in this test block
+      const res = await request(app)
+        .get("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.items).toEqual([]);
+      expect(res.body.data.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+      });
+    });
+
+    it("requesting page beyond total count returns empty items list", async () => {
+      const app = createApp();
+      await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "page-test-key")
+        .send({ amount: "20.00", currency: "USD", description: "One tx" });
+
+      const res = await request(app)
+        .get("/api/transactions?page=2&limit=10")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.items).toEqual([]);
+      expect(res.body.data.pagination.page).toBe(2);
+      expect(res.body.data.pagination.total).toBe(1);
+      expect(res.body.data.pagination.totalPages).toBe(1);
+    });
   });
 
   describe("GET /api/transactions/:id - Details & Ownership", () => {
@@ -438,6 +506,54 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(resOtherUser.body.error.message).toBe("Transaction not found");
       expect(resNonExistent.body.error.message).toBe("Transaction not found");
     });
+
+    it("owner can query transaction by internal UUID as well as public transactionId", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "uuid-lookup-key")
+        .send({ amount: "65.00", currency: "USD", description: "UUID Lookup Tx" });
+
+      const internalUuid = createRes.body.data.id;
+      const publicTxId = createRes.body.data.transactionId;
+
+      // Query by internal UUID
+      const resUuid = await request(app)
+        .get(`/api/transactions/${internalUuid}`)
+        .set("Authorization", `Bearer ${userToken}`);
+
+      // Query by public transaction ID
+      const resPublic = await request(app)
+        .get(`/api/transactions/${publicTxId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(resUuid.status).toBe(200);
+      expect(resPublic.status).toBe(200);
+      expect(resUuid.body.data.transactionId).toBe(publicTxId);
+      expect(resPublic.body.data.id).toBe(internalUuid);
+    });
+
+    it("handles special characters, unicode, and quotes in transaction description", async () => {
+      const app = createApp();
+      const specialDesc = "Café & Co. 'Special' <Deal> 100% 🚀 — \"Punctuation/Test\"";
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "special-desc-key")
+        .send({ amount: "12.34", currency: "EUR", description: specialDesc });
+
+      expect(createRes.status).toBe(201);
+      expect(createRes.body.data.description).toBe(specialDesc);
+
+      const txId = createRes.body.data.transactionId;
+      const getRes = await request(app)
+        .get(`/api/transactions/${txId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(getRes.status).toBe(200);
+      expect(getRes.body.data.description).toBe(specialDesc);
+    });
   });
 
   describe("POST /api/transactions/:id/simulate - Simulation", () => {
@@ -483,6 +599,15 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(res.body.data.processedAt).toBeDefined();
       expect(typeof res.body.data.processedAt).toBe("string");
       expect(res.body.data.failureReason).toBe("Payment simulation failed");
+
+      // Confirm persistence via GET details
+      const getRes = await request(app)
+        .get(`/api/transactions/${txId}`)
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(getRes.status).toBe(200);
+      expect(getRes.body.data.status).toBe("FAILED");
+      expect(getRes.body.data.failureReason).toBe("Payment simulation failed");
+      expect(getRes.body.data.processedAt).toBe(res.body.data.processedAt);
     });
 
     it("invalid outcome returns 422", async () => {
@@ -594,6 +719,26 @@ describe("Transactions API - Creation & Idempotency", () => {
         .get(`/api/transactions/${txId}`)
         .set("Authorization", `Bearer ${userToken}`);
       expect(["SUCCESS", "FAILED"]).toContain(detailRes.body.data.status);
+    });
+
+    it("can simulate transaction using internal UUID as path parameter", async () => {
+      const app = createApp();
+      const createRes = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "uuid-sim-key")
+        .send({ amount: "33.00", currency: "USD", description: "UUID Sim" });
+
+      const internalUuid = createRes.body.data.id;
+
+      const simRes = await request(app)
+        .post(`/api/transactions/${internalUuid}/simulate`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ outcome: "SUCCESS" });
+
+      expect(simRes.status).toBe(200);
+      expect(simRes.body.data.status).toBe("SUCCESS");
+      expect(simRes.body.data.id).toBe(internalUuid);
     });
   });
 });

@@ -212,5 +212,22 @@ describe("User Authentication & Profile API", () => {
       expect(res2.status).toBe(401);
       expect(res2.body.error.code).toBe("UNAUTHORIZED");
     });
+
+    it("valid JWT for non-existent user returns 404 NOT_FOUND", async () => {
+      const app = createApp();
+      const tokenForGhost = jwt.sign(
+        { sub: "00000000-0000-0000-0000-000000000000" },
+        env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      const res = await request(app)
+        .get("/api/users/me")
+        .set("Authorization", `Bearer ${tokenForGhost}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.error.code).toBe("NOT_FOUND");
+      expect(res.body.error.message).toBe("User not found");
+    });
   });
 });
