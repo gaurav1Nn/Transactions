@@ -1,0 +1,15 @@
+node_modules
+apps/*/node_modules
+dist
+apps/*/dist
+tests
+apps/*/tests
+.git
+.github
+.env
+.env.*
+*.log
+npm-debug.log*
+.DS_Store
+postman
+docs
