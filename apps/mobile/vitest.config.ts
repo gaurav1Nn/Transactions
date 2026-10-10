@@ -13,6 +13,7 @@ export default defineConfig({
       "@expo/vector-icons": path.resolve(__dirname, "tests/mocks/vector-icons.ts"),
       "expo-constants": path.resolve(__dirname, "tests/mocks/expo-constants.ts"),
       "expo-secure-store": path.resolve(__dirname, "tests/mocks/secure-store.ts"),
+      "expo-router": path.resolve(__dirname, "tests/mocks/expo-router.ts"),
       "@": path.resolve(__dirname, "src"),
     },
   },

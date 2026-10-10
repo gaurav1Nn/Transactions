@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef } from "react";
 import {
   View,
   Text,
@@ -21,80 +21,86 @@ export interface AppTextFieldProps extends Omit<TextInputProps, "style"> {
   containerStyle?: ViewStyle;
 }
 
-export function AppTextField({
-  label,
-  error,
-  helperText,
-  leadingIcon,
-  trailingAction,
-  containerStyle,
-  onFocus,
-  onBlur,
-  secureTextEntry,
-  accessibilityHint,
-  ...restProps
-}: AppTextFieldProps): React.JSX.Element {
-  const [isFocused, setIsFocused] = useState(false);
+export const AppTextField = forwardRef<TextInput, AppTextFieldProps>(
+  function AppTextField(
+    {
+      label,
+      error,
+      helperText,
+      leadingIcon,
+      trailingAction,
+      containerStyle,
+      onFocus,
+      onBlur,
+      secureTextEntry,
+      accessibilityHint,
+      ...restProps
+    },
+    ref
+  ): React.JSX.Element {
+    const [isFocused, setIsFocused] = useState(false);
 
-  const hasError = Boolean(error);
+    const hasError = Boolean(error);
 
-  const handleFocus: TextInputProps["onFocus"] = (e) => {
-    setIsFocused(true);
-    onFocus?.(e);
-  };
+    const handleFocus: TextInputProps["onFocus"] = (e) => {
+      setIsFocused(true);
+      onFocus?.(e);
+    };
 
-  const handleBlur: TextInputProps["onBlur"] = (e) => {
-    setIsFocused(false);
-    onBlur?.(e);
-  };
+    const handleBlur: TextInputProps["onBlur"] = (e) => {
+      setIsFocused(false);
+      onBlur?.(e);
+    };
 
-  return (
-    <View style={[styles.container, containerStyle]}>
-      <Text style={[styles.label, typography.eyebrow]}>{label}</Text>
-      <View
-        style={[
-          styles.inputContainer,
-          isFocused && styles.inputFocused,
-          hasError && styles.inputError,
-        ]}
-      >
-        {Boolean(leadingIcon) && (
-          <View style={styles.leadingIcon}>
-            <AppIcon
-              name={leadingIcon!}
-              size={20}
-              color={isFocused ? colors.primary : colors.inkMuted}
-            />
-          </View>
-        )}
-        <TextInput
-          style={[styles.input, typography.body]}
-          placeholderTextColor={colors.inkMuted}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          secureTextEntry={secureTextEntry}
-          accessibilityLabel={label}
-          accessibilityHint={accessibilityHint || helperText}
-          aria-invalid={hasError}
-          {...restProps}
-        />
-        {Boolean(trailingAction) && (
-          <View style={styles.trailingAction}>{trailingAction}</View>
-        )}
-      </View>
-      {hasError ? (
-        <View style={styles.feedbackRow} accessibilityRole="alert">
-          <AppIcon name="warning" size={14} color={colors.failed} />
-          <Text style={[styles.errorText, typography.caption]}>{error}</Text>
+    return (
+      <View style={[styles.container, containerStyle]}>
+        <Text style={[styles.label, typography.eyebrow]}>{label}</Text>
+        <View
+          style={[
+            styles.inputContainer,
+            isFocused && styles.inputFocused,
+            hasError && styles.inputError,
+          ]}
+        >
+          {Boolean(leadingIcon) && (
+            <View style={styles.leadingIcon}>
+              <AppIcon
+                name={leadingIcon!}
+                size={20}
+                color={isFocused ? colors.primary : colors.inkMuted}
+              />
+            </View>
+          )}
+          <TextInput
+            ref={ref}
+            style={[styles.input, typography.body]}
+            placeholderTextColor={colors.inkMuted}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            secureTextEntry={secureTextEntry}
+            accessibilityLabel={label}
+            accessibilityHint={accessibilityHint || helperText}
+            aria-invalid={hasError}
+            {...restProps}
+          />
+          {Boolean(trailingAction) && (
+            <View style={styles.trailingAction}>{trailingAction}</View>
+          )}
         </View>
-      ) : Boolean(helperText) ? (
-        <Text style={[styles.helperText, typography.caption]}>
-          {helperText}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
+        {hasError ? (
+          <View style={styles.feedbackRow} accessibilityRole="alert">
+            <AppIcon name="warning" size={14} color={colors.failed} />
+            <Text style={[styles.errorText, typography.caption]}>{error}</Text>
+          </View>
+        ) : Boolean(helperText) ? (
+          <Text style={[styles.helperText, typography.caption]}>
+            {helperText}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {

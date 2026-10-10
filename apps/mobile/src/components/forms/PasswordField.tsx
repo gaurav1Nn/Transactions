@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, forwardRef } from "react";
+import { TouchableOpacity, StyleSheet, TextInput } from "react-native";
 import { AppTextField, AppTextFieldProps } from "./AppTextField.js";
 import { AppIcon } from "../layout/AppIcon.js";
 import { colors } from "../../theme/colors.js";
@@ -10,41 +10,41 @@ export type PasswordFieldProps = Omit<
   "secureTextEntry" | "trailingAction"
 >;
 
-export function PasswordField({
-  leadingIcon = "password",
-  ...props
-}: PasswordFieldProps): React.JSX.Element {
-  const [showPassword, setShowPassword] = useState(false);
+export const PasswordField = forwardRef<TextInput, PasswordFieldProps>(
+  function PasswordField({ leadingIcon = "password", ...props }, ref): React.JSX.Element {
+    const [showPassword, setShowPassword] = useState(false);
 
-  const toggleLabel = showPassword ? "Hide password" : "Show password";
+    const toggleLabel = showPassword ? "Hide password" : "Show password";
 
-  const trailingAction = (
-    <TouchableOpacity
-      onPress={() => setShowPassword((prev) => !prev)}
-      hitSlop={hit.slop}
-      style={styles.toggleButton}
-      accessibilityRole="button"
-      accessibilityLabel={toggleLabel}
-    >
-      <AppIcon
-        name={showPassword ? "hidePassword" : "showPassword"}
-        size={20}
-        color={colors.inkMuted}
+    const trailingAction = (
+      <TouchableOpacity
+        onPress={() => setShowPassword((prev) => !prev)}
+        hitSlop={hit.slop}
+        style={styles.toggleButton}
+        accessibilityRole="button"
+        accessibilityLabel={toggleLabel}
+      >
+        <AppIcon
+          name={showPassword ? "hidePassword" : "showPassword"}
+          size={20}
+          color={colors.inkMuted}
+        />
+      </TouchableOpacity>
+    );
+
+    return (
+      <AppTextField
+        ref={ref}
+        secureTextEntry={!showPassword}
+        leadingIcon={leadingIcon}
+        trailingAction={trailingAction}
+        autoCapitalize="none"
+        autoCorrect={false}
+        {...props}
       />
-    </TouchableOpacity>
-  );
-
-  return (
-    <AppTextField
-      secureTextEntry={!showPassword}
-      leadingIcon={leadingIcon}
-      trailingAction={trailingAction}
-      autoCapitalize="none"
-      autoCorrect={false}
-      {...props}
-    />
-  );
-}
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   toggleButton: {
