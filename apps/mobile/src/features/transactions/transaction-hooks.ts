@@ -1,11 +1,13 @@
 import {
   useQuery,
   useInfiniteQuery,
+  useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
   listTransactionsApi,
   getTransactionApi,
+  simulateTransactionApi,
   ListTransactionsParams,
 } from "../../api/transactions.api.js";
 import { transactionsQueryKeys } from "./query-keys.js";
@@ -129,4 +131,33 @@ export function useInvalidateTransactions() {
       queryKey: transactionsQueryKeys.all,
     });
   };
+}
+
+export function useSimulateTransaction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      outcome,
+    }: {
+      id: string;
+      outcome: "SUCCESS" | "FAILED";
+    }) => simulateTransactionApi(id, outcome),
+    onSuccess: (updatedTx, variables) => {
+      queryClient.setQueryData(
+        transactionsQueryKeys.detail(variables.id),
+        updatedTx
+      );
+      if (updatedTx.transactionId !== variables.id) {
+        queryClient.setQueryData(
+          transactionsQueryKeys.detail(updatedTx.transactionId),
+          updatedTx
+        );
+      }
+      void queryClient.invalidateQueries({
+        queryKey: transactionsQueryKeys.all,
+      });
+    },
+  });
 }
