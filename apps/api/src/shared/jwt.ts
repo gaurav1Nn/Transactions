@@ -16,7 +16,12 @@ export function signAccessToken(userId: string): string {
 export function verifyAccessToken(token: string): AccessTokenPayload {
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET);
-    if (typeof decoded !== "object" || !decoded || typeof (decoded as AccessTokenPayload).sub !== "string") {
+    if (
+      typeof decoded !== "object" ||
+      !decoded ||
+      !("sub" in decoded) ||
+      typeof decoded.sub !== "string"
+    ) {
       throw new AppError("UNAUTHORIZED", "Invalid token payload", 401);
     }
     return decoded as AccessTokenPayload;

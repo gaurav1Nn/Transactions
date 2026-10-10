@@ -4,7 +4,7 @@ import {
   transactionsService,
 } from "./transactions.service.js";
 import { ListTransactionsQuery } from "./transactions.schemas.js";
-
+import { AppError } from "../../shared/app-error.js";
 export class TransactionsController {
   constructor(
     private service: TransactionsService = transactionsService
@@ -16,9 +16,12 @@ export class TransactionsController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = req.user!.id;
-      const idempotencyKey = req.headers["idempotency-key"] as string;
-
+      if (!req.user) {
+        throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+      }
+      const userId = req.user.id;
+      const rawKey = req.headers["idempotency-key"];
+      const idempotencyKey = Array.isArray(rawKey) ? rawKey[0] : (rawKey ?? "");
       const result = await this.service.createTransaction(
         userId,
         idempotencyKey,
@@ -40,9 +43,11 @@ export class TransactionsController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = req.user!.id;
+      if (!req.user) {
+        throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+      }
+      const userId = req.user.id;
       const query = req.query as unknown as ListTransactionsQuery;
-
       const result = await this.service.listTransactions(userId, query);
       res.status(200).json({
         data: result,
@@ -58,9 +63,11 @@ export class TransactionsController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = req.user!.id;
+      if (!req.user) {
+        throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+      }
+      const userId = req.user.id;
       const id = req.params.id;
-
       const result = await this.service.getTransaction(userId, id);
       res.status(200).json({
         data: result,
@@ -76,10 +83,12 @@ export class TransactionsController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = req.user!.id;
+      if (!req.user) {
+        throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+      }
+      const userId = req.user.id;
       const id = req.params.id;
       const { outcome } = req.body;
-
       const result = await this.service.simulateTransaction(
         userId,
         id,

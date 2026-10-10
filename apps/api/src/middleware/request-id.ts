@@ -7,10 +7,11 @@ export function requestIdMiddleware(
   next: NextFunction
 ): void {
   const inboundId = req.headers["x-request-id"];
-  const requestId =
-    typeof inboundId === "string" && inboundId.trim().length > 0
-      ? inboundId.trim()
-      : uuidv4();
+  const isValidInbound =
+    typeof inboundId === "string" &&
+    /^[a-zA-Z0-9_-]{1,128}$/.test(inboundId.trim());
+
+  const requestId = isValidInbound ? inboundId.trim() : uuidv4();
 
   req.id = requestId;
   res.setHeader("X-Request-ID", requestId);

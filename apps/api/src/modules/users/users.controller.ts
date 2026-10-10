@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { UsersService, usersService } from "./users.service.js";
-
+import { AppError } from "../../shared/app-error.js";
 export class UsersController {
   constructor(private service: UsersService = usersService) {}
 
@@ -10,7 +10,10 @@ export class UsersController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = req.user!.id;
+      if (!req.user) {
+        throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+      }
+      const userId = req.user.id;
       const result = await this.service.getCurrentUser(userId);
       res.status(200).json({
         data: result,

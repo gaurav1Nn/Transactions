@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../shared/app-error.js";
-
+import { logger } from "../config/logger.js";
 export function errorHandler(
   err: unknown,
   req: Request,
@@ -71,7 +71,8 @@ export function errorHandler(
     return;
   }
 
-  // Unexpected internal error - safe 500 without stack or database leak
+  // Unexpected internal error - log server-side and return safe 500
+  logger.error({ err, requestId }, "Unhandled internal error");
   res.status(500).json({
     error: {
       code: "INTERNAL_SERVER_ERROR",

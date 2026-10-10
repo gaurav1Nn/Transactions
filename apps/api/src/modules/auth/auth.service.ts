@@ -5,6 +5,9 @@ import { hashPassword, verifyPassword } from "../../shared/password.js";
 import { signAccessToken } from "../../shared/jwt.js";
 import { AppError } from "../../shared/app-error.js";
 
+const DUMMY_HASH =
+  "$2a$10$wK1k6iB7B9k6Xl9Kj0c8euKz6sY9Gf0B0kG6z5jW0iB7B9k6Xl9Kj";
+
 export interface UserDto {
   id: string;
   name: string;
@@ -81,11 +84,10 @@ export class AuthService {
 
     const user = await this.repo.findByEmail(normalizedEmail);
     if (!user) {
-      // Execute dummy timing-safe verification
-      await hashPassword("dummy-salt-constant");
+      // Execute dummy timing-safe verification matching verifyPassword execution profile
+      await verifyPassword(input.password, DUMMY_HASH);
       throw new AppError("UNAUTHORIZED", "Invalid email or password", 401);
     }
-
     const isMatch = await verifyPassword(input.password, user.passwordHash);
     if (!isMatch) {
       throw new AppError("UNAUTHORIZED", "Invalid email or password", 401);

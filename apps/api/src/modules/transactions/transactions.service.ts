@@ -180,7 +180,10 @@ export class TransactionsService {
     }
 
     const updated = await this.repo.findOwnedTransaction(userId, id);
-    return toTransactionDto(updated!);
+    if (!updated) {
+      throw new AppError("NOT_FOUND", "Transaction not found", 404);
+    }
+    return toTransactionDto(updated);
   }
 
   private assertIdempotencyMatch(

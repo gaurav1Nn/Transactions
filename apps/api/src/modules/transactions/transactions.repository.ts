@@ -1,6 +1,9 @@
 import { Transaction, Prisma, TransactionStatus } from "@prisma/client";
 import { prisma } from "../../shared/prisma.js";
 
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export class TransactionsRepository {
   async findByIdempotencyKey(
     userId: string,
@@ -29,10 +32,7 @@ export class TransactionsRepository {
     idOrTransactionId: string
   ): Promise<Transaction | null> {
     // UUID regex check to prevent PostgreSQL syntax errors when querying uuid column
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        idOrTransactionId
-      );
+    const isUuid = UUID_REGEX.test(idOrTransactionId);
 
     const conditions: Prisma.TransactionWhereInput[] = [
       { transactionId: idOrTransactionId },
@@ -58,10 +58,7 @@ export class TransactionsRepository {
       processedAt: Date;
     }
   ): Promise<number> {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        idOrTransactionId
-      );
+    const isUuid = UUID_REGEX.test(idOrTransactionId);
 
     const conditions: Prisma.TransactionWhereInput[] = [
       { transactionId: idOrTransactionId },
