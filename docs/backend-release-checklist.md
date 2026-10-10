@@ -7,7 +7,7 @@
 | PostgreSQL Migrations | PASSED | Schema applied cleanly with composite unique constraints and indices |
 | Static Analysis (Lint) | PASSED | `npm run lint --workspace @ace/api` exited `0` |
 | TypeScript Strict Check | PASSED | `npm run typecheck --workspace @ace/api` exited `0` |
-| Automated Test Suite | PASSED | 50/50 tests passing across 9 test files (`npm test --workspace @ace/api`) |
+| Automated Test Suite | PASSED | 60/60 tests passing across 9 test files (`npm test --workspace @ace/api`) |
 | Production Build | PASSED | `npm run build --workspace @ace/api` compiles cleanly to `apps/api/dist` |
 | Postman / Newman Suite | PASSED | 16/16 requests, 32/32 assertions passing (`newman run postman/ACE-Transactions.postman_collection.json`) |
 | Secret & Artifact Audit | PASSED | No `.env`, private keys, passwords, or cloud credentials tracked |
