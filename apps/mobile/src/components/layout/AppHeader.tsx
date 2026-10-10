@@ -69,6 +69,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: space.gutter,
     backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   left: {
     flexDirection: "row",

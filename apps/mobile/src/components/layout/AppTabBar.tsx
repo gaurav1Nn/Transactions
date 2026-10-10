@@ -195,9 +195,9 @@ const styles = StyleSheet.create({
     height: 3,
   },
   createButtonCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",

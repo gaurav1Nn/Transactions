@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     elevation: elevation.modal,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: colors.ink,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 10,

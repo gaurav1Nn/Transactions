@@ -37,6 +37,9 @@ export function MoneyText({
         >
           {parts.formatted}
         </Text>
+        <Text style={[styles.rowCurrency, typography.caption]}>
+          {parts.currency}
+        </Text>
       </View>
     );
   }
@@ -97,6 +100,11 @@ export function MoneyText({
 const styles = StyleSheet.create({
   rowWrap: {
     alignItems: "flex-end",
+  },
+  rowCurrency: {
+    color: colors.inkMuted,
+    fontSize: 11,
+    lineHeight: 14,
   },
   heroWrap: {
     alignItems: "flex-start",

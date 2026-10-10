@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors } from "../../theme/colors.js";
 import { space, hit } from "../../theme/spacing.js";
 import { typography } from "../../theme/typography.js";
+import { AppIcon } from "./AppIcon.js";
 
 export interface SectionHeaderProps {
   title: string;
@@ -27,10 +28,12 @@ export function SectionHeader({
         <TouchableOpacity
           onPress={onAction}
           hitSlop={hit.slop}
+          style={styles.actionRow}
           accessibilityRole="button"
           accessibilityLabel={actionText}
         >
           <Text style={[styles.action, typography.bodySm]}>{actionText}</Text>
+          <AppIcon name="forward" size={14} color={colors.primary} />
         </TouchableOpacity>
       )}
     </View>
@@ -46,6 +49,11 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   action: {
     color: colors.primary,

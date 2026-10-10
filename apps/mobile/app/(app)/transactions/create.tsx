@@ -81,8 +81,9 @@ export default function CreateTransactionScreen(): React.JSX.Element {
     });
   };
 
+  const isAmountValid =
+    Boolean(amount.trim()) && parseFloat(amount) > 0 && !fieldErrors.amount;
   const liveFormattedAmount = formatMoney(amount || "0", currency);
-
   return (
     <ScreenContainer scroll keyboardAvoiding padded={false}>
       {/* Top Header */}
@@ -161,11 +162,12 @@ export default function CreateTransactionScreen(): React.JSX.Element {
 
         {/* Live Summary Line & Submit */}
         <View style={styles.summarySection}>
-          <Text style={[styles.summaryText, typography.bodySm]}>
-            You're creating a <Text style={styles.boldText}>Pending</Text> transaction of{" "}
-            <Text style={styles.boldText}>{liveFormattedAmount} {currency}</Text>
-          </Text>
-
+          {isAmountValid && (
+            <Text style={[styles.summaryText, typography.bodySm]}>
+              You're creating a <Text style={styles.boldText}>Pending</Text> transaction of{" "}
+              <Text style={styles.boldText}>{liveFormattedAmount} {currency}</Text>
+            </Text>
+          )}
           <View style={styles.submitWrap}>
             <AppButton
               label="Create transaction"

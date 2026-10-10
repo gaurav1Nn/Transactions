@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   rightCol: {
     alignItems: "flex-end",
     justifyContent: "center",
+    flexShrink: 0,
   },
   badgeWrap: {
     marginTop: space.xs,

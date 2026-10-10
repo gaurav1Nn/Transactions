@@ -38,12 +38,12 @@ export function AmountInput({
   const symbol = CURRENCY_SYMBOLS[currency] || `${currency} `;
   const currentCents = amountToCents(value);
 
-  const quickChips = [
-    { label: "+50", cents: 5000 },
-    { label: "+100", cents: 10000 },
-    { label: "+500", cents: 50000 },
-    { label: "+1k", cents: 100000 },
-  ];
+    const quickChips = [
+      { label: `+${symbol}50`, cents: 5000 },
+      { label: `+${symbol}100`, cents: 10000 },
+      { label: `+${symbol}500`, cents: 50000 },
+      { label: `+${symbol}1k`, cents: 100000 },
+    ];
 
   const handleTextChange = (raw: string) => {
     const sanitized = sanitizeAmountInput(raw);

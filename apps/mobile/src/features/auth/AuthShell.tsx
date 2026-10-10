@@ -39,7 +39,9 @@ export function AuthShell({
         {/* Brand Block */}
         <View style={styles.brandBlock}>
           <View style={styles.logoTile}>
-            <Text style={styles.logoLetter}>A</Text>
+            <View style={styles.innerBadge}>
+              <Text style={styles.logoLetter}>A</Text>
+            </View>
           </View>
           <View style={styles.titleRow}>
             <Text
@@ -99,19 +101,27 @@ const styles = StyleSheet.create({
     marginBottom: space.xl,
   },
   logoTile: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
     borderRadius: radius.card,
-    backgroundColor: colors.navy,
+    backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: space.md,
     borderWidth: border.card,
     borderColor: colors.border,
   },
+  innerBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.control,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   logoLetter: {
-    color: colors.onNavy,
-    fontSize: 32,
+    color: colors.surface,
+    fontSize: 22,
     fontWeight: "700",
     fontFamily: "serif",
   },
