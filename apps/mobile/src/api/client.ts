@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 export type TokenProvider = () => Promise<string | null> | string | null;
@@ -11,6 +12,10 @@ function resolveBaseUrl(): string {
   const extraUrl = Constants.expoConfig?.extra?.apiUrl;
   if (typeof extraUrl === "string" && extraUrl.length > 0) {
     return extraUrl;
+  }
+  // Android emulator maps the host machine loopback to 10.0.2.2
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:3000";
   }
   return "http://localhost:3000";
 }
@@ -26,6 +31,10 @@ export function setAccessTokenProvider(provider: TokenProvider | null): void {
 
 export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
   unauthorizedHandler = handler;
+}
+
+export function setBaseUrl(url: string): void {
+  apiClient.defaults.baseURL = url;
 }
 
 export const apiClient: AxiosInstance = axios.create({
