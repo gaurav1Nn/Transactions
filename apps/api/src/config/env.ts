@@ -21,6 +21,8 @@ const envSchema = z.object({
     .string()
     .default("*")
     .transform((val) => val.split(",").map((s) => s.trim())),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -42,11 +42,25 @@ export function errorHandler(
     return;
   }
 
-  // SyntaxError from body-parser for malformed JSON
+  // Payload too large error from express.json (body-parser)
   if (
-    err instanceof SyntaxError &&
-    "body" in (err as unknown as Record<string, unknown>)
+    err &&
+    typeof err === "object" &&
+    (("type" in err && err.type === "entity.too.large") ||
+      ("status" in err && err.status === 413))
   ) {
+    res.status(413).json({
+      error: {
+        code: "PAYLOAD_TOO_LARGE",
+        message: "Request payload exceeds size limit",
+        requestId,
+      },
+    });
+    return;
+  }
+
+  // SyntaxError from body-parser for malformed JSON
+  if (err instanceof SyntaxError && "body" in err) {
     res.status(400).json({
       error: {
         code: "BAD_REQUEST",
