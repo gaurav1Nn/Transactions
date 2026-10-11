@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   Share,
   TouchableOpacity,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
 import * as Clipboard from "expo-clipboard";
 import { haptics } from "../../utils/haptics";
@@ -43,6 +43,9 @@ export interface TransactionDetailsProps {
 
 export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.Element {
   const router = useRouter();
+  const { autoReturnHome } = useLocalSearchParams<{
+    autoReturnHome?: string;
+  }>();
   const { showToast } = useToast();
 
   const {
@@ -54,6 +57,16 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
   } = useTransaction(id);
 
   const simulateMutation = useSimulateTransaction();
+
+  useEffect(() => {
+    if (autoReturnHome !== "true" || tx?.status !== "SUCCESS") return;
+
+    const timeout = setTimeout(() => {
+      router.replace("/(app)");
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [autoReturnHome, router, tx?.status]);
 
   const [confirmOutcome, setConfirmOutcome] = useState<"SUCCESS" | "FAILED" | null>(
     null

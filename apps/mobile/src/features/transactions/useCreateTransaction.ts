@@ -80,7 +80,9 @@ export function useCreateTransaction() {
         resetIdempotencyKey();
 
         // Navigate to details screen
-        router.replace(`/(app)/transactions/${result.transactionId}`);
+        router.replace(
+          `/(app)/transactions/${result.transactionId}?autoReturnHome=true`
+        );
         return result;
       } catch (err) {
         haptics.error();
