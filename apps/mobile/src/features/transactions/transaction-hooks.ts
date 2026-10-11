@@ -9,10 +9,10 @@ import {
   getTransactionApi,
   simulateTransactionApi,
   ListTransactionsParams,
-} from "../../api/transactions.api.js";
-import { transactionsQueryKeys } from "./query-keys.js";
-import { TransactionDto } from "../../types/api.js";
-import { getApiErrorMessage } from "../../utils/api-error.js";
+} from "../../api/transactions.api";
+import { transactionsQueryKeys } from "./query-keys";
+import { TransactionDto } from "../../types/api";
+import { getApiErrorMessage } from "../../utils/api-error";
 
 export function useTransactions(params?: ListTransactionsParams) {
   const query = useQuery({
@@ -33,14 +33,11 @@ export function useInfiniteTransactions(
 ) {
   const query = useInfiniteQuery({
     queryKey: transactionsQueryKeys.list(params),
-    queryFn: ({ pageParam = 1 }) =>
-      listTransactionsApi({ ...params, page: pageParam }),
-    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      listTransactionsApi({ ...params, cursor: pageParam ?? undefined }),
+    initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
-        return lastPage.pagination.page + 1;
-      }
-      return undefined;
+      return lastPage.pagination.nextCursor;
     },
   });
 

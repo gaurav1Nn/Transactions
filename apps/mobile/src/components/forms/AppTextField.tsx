@@ -7,10 +7,11 @@ import {
   TextInputProps,
   ViewStyle,
 } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon, SemanticIconName } from "../layout/AppIcon.js";
+import { colors } from "../../theme/colors";
+import { space, radius, border } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon, SemanticIconName } from "../layout/AppIcon";
+import { useRevealFocusedInput } from "../layout/ScreenContainer";
 
 export interface AppTextFieldProps extends Omit<TextInputProps, "style"> {
   label: string;
@@ -39,12 +40,14 @@ export const AppTextField = forwardRef<TextInput, AppTextFieldProps>(
     ref
   ): React.JSX.Element {
     const [isFocused, setIsFocused] = useState(false);
+    const revealFocusedInput = useRevealFocusedInput();
 
     const hasError = Boolean(error);
 
     const handleFocus: TextInputProps["onFocus"] = (e) => {
       setIsFocused(true);
       onFocus?.(e);
+      revealFocusedInput?.();
     };
 
     const handleBlur: TextInputProps["onBlur"] = (e) => {

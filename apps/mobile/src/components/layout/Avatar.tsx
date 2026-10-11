@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { typography } from "../../theme/typography.js";
-import { radius } from "../../theme/spacing.js";
+import { colors } from "../../theme/colors";
+import { typography } from "../../theme/typography";
+import { radius } from "../../theme/spacing";
 
 export interface AvatarProps {
   name: string;

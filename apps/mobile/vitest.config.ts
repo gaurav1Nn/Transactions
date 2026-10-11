@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    setupFiles: [path.resolve(__dirname, "tests/setup.ts")],
+    exclude: ["tests/e2e-wiring.test.ts"],
   },
   resolve: {
     alias: {
@@ -15,6 +15,8 @@ export default defineConfig({
       "expo-constants": path.resolve(__dirname, "tests/mocks/expo-constants.ts"),
       "expo-secure-store": path.resolve(__dirname, "tests/mocks/secure-store.ts"),
       "expo-router": path.resolve(__dirname, "tests/mocks/expo-router.ts"),
+      "expo-haptics": path.resolve(__dirname, "tests/mocks/expo-haptics.ts"),
+      "expo-clipboard": path.resolve(__dirname, "tests/mocks/expo-clipboard.ts"),
       "@": path.resolve(__dirname, "src"),
     },
   },

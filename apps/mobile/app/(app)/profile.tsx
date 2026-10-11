@@ -7,20 +7,21 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../src/providers/AuthProvider.js";
-import { useProfile } from "../../src/features/profile/useProfile.js";
-import { ScreenContainer } from "../../src/components/layout/ScreenContainer.js";
-import { AppHeader } from "../../src/components/layout/AppHeader.js";
-import { Avatar } from "../../src/components/layout/Avatar.js";
-import { AppButton } from "../../src/components/forms/AppButton.js";
-import { ConfirmDialog } from "../../src/components/transactions/ConfirmDialog.js";
-import { Skeleton } from "../../src/components/feedback/Skeleton.js";
-import { ErrorState } from "../../src/components/feedback/RemoteStates.js";
-import { formatMemberSince } from "../../src/utils/format-date.js";
-import { BASE_URL } from "../../src/api/client.js";
-import { colors } from "../../src/theme/colors.js";
-import { space, radius, border } from "../../src/theme/spacing.js";
-import { typography } from "../../src/theme/typography.js";
+import { useAuth } from "../../src/providers/AuthProvider";
+import { useProfile } from "../../src/features/profile/useProfile";
+import { ScreenContainer } from "../../src/components/layout/ScreenContainer";
+import { AppHeader } from "../../src/components/layout/AppHeader";
+import { Avatar } from "../../src/components/layout/Avatar";
+import { AppButton } from "../../src/components/forms/AppButton";
+import { ConfirmDialog } from "../../src/components/transactions/ConfirmDialog";
+import { Skeleton } from "../../src/components/feedback/Skeleton";
+import { ErrorState } from "../../src/components/feedback/RemoteStates";
+import { formatMemberSince } from "../../src/utils/format-date";
+import { BASE_URL } from "../../src/api/client";
+import { useToast } from "../../src/components/feedback/Toast";
+import { colors } from "../../src/theme/colors";
+import { space, radius, border } from "../../src/theme/spacing";
+import { typography } from "../../src/theme/typography";
 
 function getHostName(url: string): string {
   try {
@@ -36,6 +37,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { signOut } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const { user, isLoading, isError, errorMessage, refetch, isRefetching } = useProfile();
 
@@ -47,6 +49,8 @@ export default function ProfileScreen(): React.JSX.Element {
       await signOut();
       setShowLogoutConfirm(false);
       router.replace("/(auth)/login");
+    } catch {
+      showToast("Could not complete logout. Check your connection and try again.", "error");
     } finally {
       setIsLoggingOut(false);
     }
@@ -84,7 +88,7 @@ export default function ProfileScreen(): React.JSX.Element {
               <View style={styles.identityRow}>
                 <Avatar name={user?.name || "User"} size={64} />
                 <View style={styles.identityInfo}>
-                  <Text style={[styles.name, typography.title]} numberOfLines={1}>
+                  <Text style={[styles.name, typography.title]}>
                     {user?.name}
                   </Text>
                   <Text style={[styles.email, typography.body]}>
@@ -126,9 +130,11 @@ export default function ProfileScreen(): React.JSX.Element {
                 <Text style={[styles.aboutValue, typography.bodyStrong]}>1.0.0</Text>
               </View>
               <View style={styles.divider} />
-              <View style={styles.aboutRow}>
+              <View style={[styles.aboutRow, styles.serverRow]}>
                 <Text style={[styles.aboutLabel, typography.bodySm]}>Server</Text>
-                <Text style={[styles.aboutValue, typography.bodyStrong]}>{serverHost}</Text>
+                <Text selectable style={[styles.aboutValue, typography.bodyStrong, styles.serverValue]}>
+                  {serverHost}
+                </Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.aboutRow}>
@@ -193,6 +199,7 @@ const styles = StyleSheet.create({
   identityInfo: {
     marginLeft: space.lg,
     flex: 1,
+    minWidth: 0,
   },
   name: {
     color: colors.ink,
@@ -223,13 +230,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: space.lg,
     paddingVertical: space.xs,
   },
   aboutLabel: {
     color: colors.inkSoft,
+    flexShrink: 1,
   },
   aboutValue: {
     color: colors.ink,
+    flexShrink: 1,
+    minWidth: 0,
+    textAlign: "right",
+  },
+  serverRow: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: space.xs,
+  },
+  serverValue: {
+    width: "100%",
+    textAlign: "left",
   },
   divider: {
     height: 1,

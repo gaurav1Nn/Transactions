@@ -1,15 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { TransactionDto } from "../../types/api.js";
-import { MoneyText } from "./MoneyText.js";
-import { StatusBadge } from "./StatusBadge.js";
-import { AppIcon } from "../layout/AppIcon.js";
-import { statusTheme } from "../../theme/status.js";
-import { formatRelativeTime } from "../../utils/format-date.js";
-import { formatMoneyParts } from "../../utils/format-money.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { TransactionDto } from "../../types/api";
+import { MoneyText } from "./MoneyText";
+import { StatusBadge } from "./StatusBadge";
+import { AppIcon } from "../layout/AppIcon";
+import { statusTheme } from "../../theme/status";
+import { formatRelativeTime } from "../../utils/format-date";
+import { formatMoneyParts } from "../../utils/format-money";
+import { colors } from "../../theme/colors";
+import { space, radius } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface TransactionListItemProps {
   transaction: TransactionDto;

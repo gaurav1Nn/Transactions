@@ -7,7 +7,7 @@ import {
   setAccessTokenProvider,
   setUnauthorizedHandler,
 } from "../src/api/client.js";
-import { registerApi, loginApi } from "../src/api/auth.api.js";
+import { registerApi, loginApi, logoutApi } from "../src/api/auth.api.js";
 import { getCurrentUser } from "../src/api/users.api.js";
 import {
   createTransactionApi,
@@ -21,7 +21,7 @@ import {
 } from "../src/utils/api-error.js";
 
 describe("Frontend <-> Backend End-to-End Wiring Verification", () => {
-  let server: http.Server;
+  let server: http.Server | undefined;
   const PORT = 3099;
   let currentToken: string | null = null;
 
@@ -44,7 +44,9 @@ describe("Frontend <-> Backend End-to-End Wiring Verification", () => {
   afterAll(async () => {
     setAccessTokenProvider(null);
     setUnauthorizedHandler(null);
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    if (server) {
+      await new Promise<void>((resolve) => server!.close(() => resolve()));
+    }
     await prisma.$disconnect();
   });
 
@@ -155,7 +157,18 @@ describe("Frontend <-> Backend End-to-End Wiring Verification", () => {
     expect(loginData.accessToken).toBeDefined();
   });
 
-  it("9. triggers unauthorized handler on 401 response", async () => {
+  it("9. rejects a copied token after the frontend calls logoutApi", async () => {
+    await logoutApi();
+
+    try {
+      await getCurrentUser();
+      expect.fail("The logged-out token must be revoked on the server");
+    } catch (err) {
+      expect(getApiErrorCode(err)).toBe("UNAUTHORIZED");
+    }
+  });
+
+  it("10. triggers unauthorized handler on 401 response", async () => {
     let unauthorizedTriggered = false;
     setUnauthorizedHandler(() => {
       unauthorizedTriggered = true;

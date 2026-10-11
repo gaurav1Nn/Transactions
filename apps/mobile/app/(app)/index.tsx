@@ -8,23 +8,23 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../src/providers/AuthProvider.js";
+import { useAuth } from "../../src/providers/AuthProvider";
 import {
   useStatusCounts,
   useTransactions,
-} from "../../src/features/transactions/transaction-hooks.js";
-import { ScreenContainer } from "../../src/components/layout/ScreenContainer.js";
-import { Avatar } from "../../src/components/layout/Avatar.js";
-import { SyncStatusPill } from "../../src/components/feedback/SyncStatusPill.js";
-import { TransactionSummary } from "../../src/features/transactions/TransactionSummary.js";
-import { RecentTransactions } from "../../src/features/transactions/RecentTransactions.js";
-import { AppButton } from "../../src/components/forms/AppButton.js";
-import { getGreeting } from "../../src/utils/greeting.js";
-import { formatRelativeTime } from "../../src/utils/format-date.js";
-import { colors } from "../../src/theme/colors.js";
-import { space, radius, border } from "../../src/theme/spacing.js";
-import { typography } from "../../src/theme/typography.js";
-import { TransactionDto, TransactionStatus } from "../../src/types/api.js";
+} from "../../src/features/transactions/transaction-hooks";
+import { ScreenContainer } from "../../src/components/layout/ScreenContainer";
+import { Avatar } from "../../src/components/layout/Avatar";
+import { SyncStatusPill } from "../../src/components/feedback/SyncStatusPill";
+import { TransactionSummary } from "../../src/features/transactions/TransactionSummary";
+import { RecentTransactions } from "../../src/features/transactions/RecentTransactions";
+import { AppButton } from "../../src/components/forms/AppButton";
+import { getGreeting } from "../../src/utils/greeting";
+import { formatRelativeTime } from "../../src/utils/format-date";
+import { colors } from "../../src/theme/colors";
+import { space, radius, border } from "../../src/theme/spacing";
+import { typography } from "../../src/theme/typography";
+import { TransactionDto, TransactionStatus } from "../../src/types/api";
 
 const DAYS = [
   "Sunday",
@@ -130,6 +130,8 @@ export default function HomeScreen(): React.JSX.Element {
       </View>
 
       <ScrollView
+        // Keep this small dashboard mounted to avoid missing content on Android.
+        removeClippedSubviews={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl

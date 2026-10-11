@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space, hit } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon } from "./AppIcon.js";
+import { colors } from "../../theme/colors";
+import { space, hit } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon } from "./AppIcon";
 
 export interface SectionHeaderProps {
   title: string;

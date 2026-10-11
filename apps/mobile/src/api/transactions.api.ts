@@ -1,4 +1,4 @@
-import { apiClient } from "./client.js";
+import { apiClient } from "./client";
 import {
   TransactionDto,
   PaginatedTransactions,
@@ -6,12 +6,13 @@ import {
   CreateTransactionRequest,
   SimulateTransactionRequest,
   TransactionStatus,
-} from "../types/api.js";
+} from "../types/api";
 
 export interface ListTransactionsParams {
   page?: number;
   limit?: number;
   status?: TransactionStatus;
+  cursor?: string;
 }
 
 export async function listTransactionsApi(

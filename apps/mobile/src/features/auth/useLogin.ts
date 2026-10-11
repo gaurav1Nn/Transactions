@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
 import { useRouter } from "expo-router";
-import { loginApi, LoginParams } from "../../api/auth.api.js";
-import { useAuth } from "../../providers/AuthProvider.js";
-import { isApiErrorResponse } from "../../utils/api-error.js";
+import { loginApi, LoginParams } from "../../api/auth.api";
+import { useAuth } from "../../providers/AuthProvider";
+import { isApiErrorResponse } from "../../utils/api-error";
 
 export function getLoginErrorMessage(err: unknown): {
   message: string;

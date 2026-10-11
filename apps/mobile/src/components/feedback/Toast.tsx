@@ -8,10 +8,10 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "../../theme/colors.js";
-import { space, radius, elevation } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon } from "../layout/AppIcon.js";
+import { colors } from "../../theme/colors";
+import { space, radius, elevation } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon } from "../layout/AppIcon";
 
 export type ToastVariant = "info" | "success" | "error";
 
@@ -42,11 +42,13 @@ export function ToastProvider({
 }): React.JSX.Element {
   const [current, setCurrent] = useState<ToastState | null>(null);
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
   const showToast = useCallback(
     (message: string, variant: ToastVariant = "info") => {
-      clearTimeout(timerRef.current as NodeJS.Timeout);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
       const id = String(Date.now());
       setCurrent({ id, message, variant });
 

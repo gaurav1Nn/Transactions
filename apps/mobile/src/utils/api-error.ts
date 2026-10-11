@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { ApiErrorResponse } from "../types/api.js";
+import { ApiErrorResponse } from "../types/api";
 
 export function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
   if (!data || typeof data !== "object" || !("error" in data)) {

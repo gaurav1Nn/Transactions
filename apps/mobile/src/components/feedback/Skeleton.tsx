@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, DimensionValue, StyleSheet, ViewStyle } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { radius } from "../../theme/spacing.js";
-import { useReducedMotion } from "../../hooks/useReducedMotion.js";
+import { colors } from "../../theme/colors";
+import { radius } from "../../theme/spacing";
+import { useReducedMotion } from "../../hooks/useReducedMotion";
 
 export interface SkeletonProps {
   width?: DimensionValue;

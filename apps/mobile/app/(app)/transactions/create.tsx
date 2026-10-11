@@ -1,20 +1,21 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
-import { ScreenContainer } from "../../../src/components/layout/ScreenContainer.js";
-import { SegmentedControl } from "../../../src/components/forms/SegmentedControl.js";
-import { AmountInput } from "../../../src/components/forms/AmountInput.js";
-import { AppTextField } from "../../../src/components/forms/AppTextField.js";
-import { AppButton } from "../../../src/components/forms/AppButton.js";
-import { InlineNotice } from "../../../src/components/feedback/InlineNotice.js";
-import { ConfirmDialog } from "../../../src/components/transactions/ConfirmDialog.js";
-import { AppIcon } from "../../../src/components/layout/AppIcon.js";
-import { useCreateTransaction } from "../../../src/features/transactions/useCreateTransaction.js";
-import { createTransactionSchema } from "../../../src/features/transactions/create-transaction.schema.js";
-import { formatMoney } from "../../../src/utils/format-money.js";
-import { colors } from "../../../src/theme/colors.js";
-import { space, hit } from "../../../src/theme/spacing.js";
-import { typography } from "../../../src/theme/typography.js";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Keyboard, ScrollView, TextInput } from "react-native";
+import { useNavigation, useRouter } from "expo-router";
+import { ScreenContainer } from "../../../src/components/layout/ScreenContainer";
+import { SegmentedControl } from "../../../src/components/forms/SegmentedControl";
+import { AmountInput } from "../../../src/components/forms/AmountInput";
+import { AppTextField } from "../../../src/components/forms/AppTextField";
+import { AppButton } from "../../../src/components/forms/AppButton";
+import { InlineNotice } from "../../../src/components/feedback/InlineNotice";
+import { ConfirmDialog } from "../../../src/components/transactions/ConfirmDialog";
+import { AppIcon } from "../../../src/components/layout/AppIcon";
+import { useCreateTransaction } from "../../../src/features/transactions/useCreateTransaction";
+import { createTransactionSchema } from "../../../src/features/transactions/create-transaction.schema";
+import { formatMoney } from "../../../src/utils/format-money";
+import { shouldPromptBeforeLeavingTransaction } from "../../../src/features/transactions/create-transaction-navigation";
+import { colors } from "../../../src/theme/colors";
+import { space, hit } from "../../../src/theme/spacing";
+import { typography } from "../../../src/theme/typography";
 
 type CurrencyChoice = "USD" | "EUR" | "GBP";
 
@@ -26,24 +27,81 @@ const CURRENCY_OPTIONS = [
 
 export default function CreateTransactionScreen(): React.JSX.Element {
   const router = useRouter();
+  const navigation = useNavigation();
 
   const [currency, setCurrency] = useState<CurrencyChoice>("USD");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ amount?: string; description?: string }>({});
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const discardConfirmedRef = useRef(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const descriptionRef = useRef<TextInput>(null);
+  const revealSubmitRef = useRef(false);
+  const scrollFrameRef = useRef<number | null>(null);
+
+  const revealSubmit = useCallback(() => {
+    if (scrollFrameRef.current !== null) {
+      cancelAnimationFrame(scrollFrameRef.current);
+    }
+    // Let the viewport resize and the bottom tabs return before finding the end.
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        if (!revealSubmitRef.current) return;
+        revealSubmitRef.current = false;
+        scrollRef.current?.scrollToEnd({ animated: true });
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    const subscription = Keyboard.addListener("keyboardDidHide", () => {
+      if (revealSubmitRef.current) revealSubmit();
+    });
+    return () => {
+      subscription.remove();
+      if (scrollFrameRef.current !== null) {
+        cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
+  }, [revealSubmit]);
+
+  const handleDescriptionDone = () => {
+    if (!amount.trim() || !description.trim()) {
+      Keyboard.dismiss();
+      return;
+    }
+    revealSubmitRef.current = true;
+    // A hardware keyboard may submit without an on-screen keyboard to close.
+    if (!Keyboard.isVisible()) revealSubmit();
+    Keyboard.dismiss();
+  };
 
   const { createTransaction, isLoading, error, clearError } = useCreateTransaction();
 
   const hasUnsavedInput = Boolean(amount.trim() || description.trim());
 
-  const handleClose = () => {
-    if (hasUnsavedInput && !isLoading) {
-      setShowDiscardConfirm(true);
-    } else {
-      router.back();
-    }
-  };
+  useEffect(
+    () =>
+      navigation.addListener("beforeRemove", (event) => {
+        if (
+          !shouldPromptBeforeLeavingTransaction({
+            hasUnsavedInput,
+            isSubmitting: isLoading,
+            discardConfirmed: discardConfirmedRef.current,
+          })
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        setShowDiscardConfirm(true);
+      }),
+    [hasUnsavedInput, isLoading, navigation]
+  );
+
+  const handleClose = () => router.back();
 
   const validateForm = (): boolean => {
     const result = createTransactionSchema.safeParse({
@@ -85,7 +143,7 @@ export default function CreateTransactionScreen(): React.JSX.Element {
     Boolean(amount.trim()) && parseFloat(amount) > 0 && !fieldErrors.amount;
   const liveFormattedAmount = formatMoney(amount || "0", currency);
   return (
-    <ScreenContainer scroll keyboardAvoiding padded={false}>
+    <ScreenContainer scroll keyboardAvoiding padded={false} scrollRef={scrollRef} bottomSafeArea={false}>
       {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -122,12 +180,14 @@ export default function CreateTransactionScreen(): React.JSX.Element {
             currency={currency}
             error={fieldErrors.amount}
             disabled={isLoading}
+            onSubmitEditing={() => descriptionRef.current?.focus()}
           />
         </View>
 
         {/* Description Field */}
         <View style={styles.section}>
           <AppTextField
+            ref={descriptionRef}
             label="Description"
             value={description}
             onChangeText={(val) => {
@@ -141,6 +201,10 @@ export default function CreateTransactionScreen(): React.JSX.Element {
             error={fieldErrors.description}
             helperText={`${description.length} / 255`}
             editable={!isLoading}
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
+            onSubmitEditing={handleDescriptionDone}
+            onFocus={() => { revealSubmitRef.current = false; }}
           />
         </View>
 
@@ -195,10 +259,14 @@ export default function CreateTransactionScreen(): React.JSX.Element {
         cancelLabel="Keep editing"
         confirmVariant="danger"
         onConfirm={() => {
+          discardConfirmedRef.current = true;
           setShowDiscardConfirm(false);
           router.back();
         }}
-        onCancel={() => setShowDiscardConfirm(false)}
+        onCancel={() => {
+          discardConfirmedRef.current = false;
+          setShowDiscardConfirm(false);
+        }}
       />
     </ScreenContainer>
   );

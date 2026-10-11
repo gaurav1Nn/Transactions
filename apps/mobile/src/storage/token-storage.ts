@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import { UserDto } from "../types/api.js";
+import { UserDto } from "../types/api";
 
 const TOKEN_KEY = "ace_access_token";
 const USER_KEY = "ace_user_profile";

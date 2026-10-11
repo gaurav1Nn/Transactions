@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { TransactionStatus } from "../../types/api.js";
-import { AppIcon } from "../layout/AppIcon.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { TransactionStatus } from "../../types/api";
+import { AppIcon } from "../layout/AppIcon";
+import { colors } from "../../theme/colors";
+import { space, radius } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface StatusStepperProps {
   status: TransactionStatus;

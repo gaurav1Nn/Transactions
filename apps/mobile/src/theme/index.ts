@@ -1,7 +1,7 @@
-import { colors } from "./colors.js";
-import { space, radius, border, elevation, hit, motion } from "./spacing.js";
-import { typography, fontFamily } from "./typography.js";
-import { statusTheme } from "./status.js";
+import { colors } from "./colors";
+import { space, radius, border, elevation, hit, motion } from "./spacing";
+import { typography, fontFamily } from "./typography";
+import { statusTheme } from "./status";
 
 export const theme = {
   colors,
@@ -18,7 +18,7 @@ export const theme = {
 
 export type Theme = typeof theme;
 
-export * from "./colors.js";
-export * from "./spacing.js";
-export * from "./typography.js";
-export * from "./status.js";
+export * from "./colors";
+export * from "./spacing";
+export * from "./typography";
+export * from "./status";

@@ -1,5 +1,6 @@
 import { Transaction, Prisma, TransactionStatus } from "@prisma/client";
 import { prisma } from "../../shared/prisma.js";
+import { TransactionCursor } from "./transaction-cursor.js";
 
 
 const UUID_REGEX =
@@ -91,21 +92,36 @@ export class TransactionsRepository {
       skip: number;
       take: number;
       status?: TransactionStatus;
+      cursor?: TransactionCursor;
     }
   ): Promise<[Transaction[], number]> {
-    const where: Prisma.TransactionWhereInput = {
+    const countWhere: Prisma.TransactionWhereInput = {
       userId,
       ...(query.status ? { status: query.status } : {}),
+    };
+    const where: Prisma.TransactionWhereInput = {
+      ...countWhere,
+      ...(query.cursor
+        ? {
+            OR: [
+              { createdAt: { lt: query.cursor.createdAt } },
+              {
+                createdAt: query.cursor.createdAt,
+                id: { lt: query.cursor.id },
+              },
+            ],
+          }
+        : {}),
     };
 
     return Promise.all([
       prisma.transaction.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         skip: query.skip,
-        take: query.take,
+        take: query.take + 1,
       }),
-      prisma.transaction.count({ where }),
+      prisma.transaction.count({ where: countWhere }),
     ]);
   }
 

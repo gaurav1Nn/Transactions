@@ -1,5 +1,5 @@
-import { apiClient } from "./client.js";
-import { AuthResponseData, ApiResponse } from "../types/api.js";
+import { apiClient } from "./client";
+import { AuthResponseData, ApiResponse } from "../types/api";
 
 export interface LoginParams {
   email: string;
@@ -28,7 +28,12 @@ export async function registerApi(params: RegisterParams): Promise<AuthResponseD
   return response.data.data;
 }
 
+export async function logoutApi(): Promise<void> {
+  await apiClient.post("/api/auth/logout");
+}
+
 export const authApi = {
   login: loginApi,
   register: registerApi,
+  logout: logoutApi,
 };

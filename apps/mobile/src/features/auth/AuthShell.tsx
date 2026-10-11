@@ -1,11 +1,11 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { ScreenContainer } from "../../components/layout/ScreenContainer.js";
-import { SegmentedControl } from "../../components/forms/SegmentedControl.js";
+import { colors } from "../../theme/colors";
+import { space, radius, border } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { ScreenContainer } from "../../components/layout/ScreenContainer";
+import { SegmentedControl } from "../../components/forms/SegmentedControl";
 
 export interface AuthShellProps {
   currentTab: "login" | "register";

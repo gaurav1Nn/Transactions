@@ -7,6 +7,7 @@ import { errorHandler } from "./middleware/error-handler.js";
 import { httpLogger } from "./config/logger.js";
 import { env } from "./config/env.js";
 import { AppError } from "./shared/app-error.js";
+import { prisma } from "./shared/prisma.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
 import { transactionsRouter } from "./modules/transactions/transactions.routes.js";
@@ -16,6 +17,7 @@ export interface AppOptions {
   authRateLimitMax?: number;
   rateLimitWindowMs?: number;
   bodyLimit?: string;
+  readinessCheck?: () => Promise<void>;
   configureRoutes?: (app: Express) => void;
 }
 
@@ -28,6 +30,7 @@ export function createApp(
       : optionsOrConfigure ?? {};
 
   const app = express();
+  app.set("trust proxy", env.TRUST_PROXY_HOPS);
 
   app.use(helmet());
   app.use(
@@ -73,6 +76,27 @@ export function createApp(
         status: "ok",
       },
     });
+  });
+
+  app.get("/ready", async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (options.readinessCheck) {
+        await options.readinessCheck();
+      } else {
+        // Protected requests depend on this table for token revocation.
+        await prisma.revokedToken.findFirst({ select: { tokenHash: true } });
+      }
+
+      res.status(200).json({ data: { status: "ready" } });
+    } catch {
+      next(
+        new AppError(
+          "SERVICE_UNAVAILABLE",
+          "Database is unavailable",
+          503
+        )
+      );
+    }
   });
 
   app.use("/api/auth", authRouter);

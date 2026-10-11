@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon } from "../../components/layout/AppIcon.js";
-import { passwordCriteria } from "./register.schema.js";
+import { colors } from "../../theme/colors";
+import { space } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon } from "../../components/layout/AppIcon";
+import { passwordCriteria } from "./register.schema";
 
 export interface PasswordRequirementsProps {
   password: string;

@@ -25,6 +25,7 @@ export interface PaginationMeta {
   limit: number;
   total: number;
   totalPages: number;
+  nextCursor?: string;
 }
 
 export interface PaginatedTransactions {

@@ -9,14 +9,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:3000"
       }
     },
     "production": {
+      "environment": "production",
       "android": {
         "buildType": "apk"
       }

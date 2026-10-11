@@ -1,6 +1,14 @@
 import { z } from "zod";
+import { decodeTransactionCursor } from "./transaction-cursor.js";
 
 const amountRegex = /^(?:[1-9]\d{0,9}|0)\.\d{2}$/;
+
+export function normalizeIdempotencyKey(
+  value: string | string[] | undefined
+): string {
+  const key = Array.isArray(value) ? value[0] : value;
+  return key?.trim() ?? "";
+}
 
 export const createTransactionSchema = z.object({
   headers: z.object({
@@ -43,13 +51,34 @@ export const createTransactionSchema = z.object({
 
 export const listTransactionsSchema = z.object({
   query: z.object({
-    page: z.coerce.number().int().min(1, "Page must be at least 1").default(1),
+    page: z.coerce
+      .number()
+      .int()
+      .min(1, "Page must be at least 1")
+      .max(100000, "Page must not exceed 100,000")
+      .default(1),
     limit: z.coerce
       .number()
       .int()
       .min(1, "Limit must be at least 1")
       .max(100, "Limit must not exceed 100")
       .default(20),
+    cursor: z
+      .string()
+      .trim()
+      .min(1, "Cursor must not be empty")
+      .refine(
+        (value) => {
+          try {
+            decodeTransactionCursor(value);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        "Cursor is invalid"
+      )
+      .optional(),
     status: z.enum(["PENDING", "SUCCESS", "FAILED"]).optional(),
   }),
 });

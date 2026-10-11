@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space, radius, hit } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon, SemanticIconName } from "../layout/AppIcon.js";
+import { colors } from "../../theme/colors";
+import { space, radius, hit } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon, SemanticIconName } from "../layout/AppIcon";
 
 export interface LoadingStateProps {
   label?: string;

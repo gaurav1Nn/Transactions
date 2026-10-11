@@ -239,7 +239,7 @@ gcloud run deploy ace-transactions-api \
   --service-account="${SA_EMAIL}" \
   --add-cloudsql-instances="${INSTANCE_CONNECTION_NAME}" \
   --set-secrets="DATABASE_URL=ace-database-url:latest,JWT_SECRET=ace-jwt-secret:latest" \
-  --set-env-vars="NODE_ENV=production,LOG_LEVEL=info,CORS_ORIGINS=*" \
+  --set-env-vars="NODE_ENV=production,LOG_LEVEL=info,CORS_ORIGINS=*,TRUST_PROXY_HOPS=1" \
   --allow-unauthenticated \
   --min-instances=0 \
   --max-instances=5 \

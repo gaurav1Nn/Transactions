@@ -45,3 +45,12 @@ model Transaction {
   @@index([userId, createdAt])
   @@map("transactions")
 }
+
+model RevokedToken {
+  tokenHash String   @id @db.Char(64)
+  expiresAt DateTime @db.Timestamptz(6)
+  revokedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([expiresAt])
+  @@map("revoked_tokens")
+}

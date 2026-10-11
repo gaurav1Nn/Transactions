@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { statusTheme, ApiTransactionStatus } from "../../theme/status.js";
-import { radius, space } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon } from "../layout/AppIcon.js";
+import { statusTheme, ApiTransactionStatus } from "../../theme/status";
+import { radius, space } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon } from "../layout/AppIcon";
 
 export interface StatusBadgeProps {
   status: ApiTransactionStatus;

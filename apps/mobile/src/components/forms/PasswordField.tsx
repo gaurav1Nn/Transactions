@@ -1,9 +1,9 @@
 import React, { useState, forwardRef } from "react";
 import { TouchableOpacity, StyleSheet, TextInput } from "react-native";
-import { AppTextField, AppTextFieldProps } from "./AppTextField.js";
-import { AppIcon } from "../layout/AppIcon.js";
-import { colors } from "../../theme/colors.js";
-import { hit } from "../../theme/spacing.js";
+import { AppTextField, AppTextFieldProps } from "./AppTextField";
+import { AppIcon } from "../layout/AppIcon";
+import { colors } from "../../theme/colors";
+import { hit } from "../../theme/spacing";
 
 export type PasswordFieldProps = Omit<
   AppTextFieldProps,

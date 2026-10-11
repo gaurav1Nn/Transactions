@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { TransactionStatus } from "../../types/api.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { TransactionStatus } from "../../types/api";
+import { colors } from "../../theme/colors";
+import { space, radius, border } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export type FilterValue = "ALL" | TransactionStatus;
 

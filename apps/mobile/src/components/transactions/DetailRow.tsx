@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space, radius } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { colors } from "../../theme/colors";
+import { space, radius } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface DetailRowProps {
   label: string;

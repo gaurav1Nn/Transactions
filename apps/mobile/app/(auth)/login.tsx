@@ -1,16 +1,16 @@
 import React, { useState, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
 import { useRouter } from "expo-router";
-import { AuthShell } from "../../src/features/auth/AuthShell.js";
-import { AppTextField } from "../../src/components/forms/AppTextField.js";
-import { PasswordField } from "../../src/components/forms/PasswordField.js";
-import { AppButton } from "../../src/components/forms/AppButton.js";
-import { InlineNotice } from "../../src/components/feedback/InlineNotice.js";
-import { useLogin } from "../../src/features/auth/useLogin.js";
-import { loginSchema } from "../../src/features/auth/login.schema.js";
-import { colors } from "../../src/theme/colors.js";
-import { space } from "../../src/theme/spacing.js";
-import { typography } from "../../src/theme/typography.js";
+import { AuthShell } from "../../src/features/auth/AuthShell";
+import { AppTextField } from "../../src/components/forms/AppTextField";
+import { PasswordField } from "../../src/components/forms/PasswordField";
+import { AppButton } from "../../src/components/forms/AppButton";
+import { InlineNotice } from "../../src/components/feedback/InlineNotice";
+import { useLogin } from "../../src/features/auth/useLogin";
+import { loginSchema } from "../../src/features/auth/login.schema";
+import { colors } from "../../src/theme/colors";
+import { space } from "../../src/theme/spacing";
+import { typography } from "../../src/theme/typography";
 
 export default function LoginScreen(): React.JSX.Element {
   const [email, setEmail] = useState("");
@@ -84,6 +84,7 @@ export default function LoginScreen(): React.JSX.Element {
           leadingIcon="email"
           error={fieldErrors.email}
           returnKeyType="next"
+          submitBehavior="submit"
           onSubmitEditing={() => passwordRef.current?.focus()}
           editable={!isLoading}
         />

@@ -3,7 +3,10 @@ import {
   TransactionsService,
   transactionsService,
 } from "./transactions.service.js";
-import { ListTransactionsQuery } from "./transactions.schemas.js";
+import {
+  ListTransactionsQuery,
+  normalizeIdempotencyKey,
+} from "./transactions.schemas.js";
 import { AppError } from "../../shared/app-error.js";
 export class TransactionsController {
   constructor(
@@ -20,8 +23,9 @@ export class TransactionsController {
         throw new AppError("UNAUTHORIZED", "Authentication required", 401);
       }
       const userId = req.user.id;
-      const rawKey = req.headers["idempotency-key"];
-      const idempotencyKey = Array.isArray(rawKey) ? rawKey[0] : (rawKey ?? "");
+      const idempotencyKey = normalizeIdempotencyKey(
+        req.headers["idempotency-key"]
+      );
       const result = await this.service.createTransaction(
         userId,
         idempotencyKey,

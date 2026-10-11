@@ -1,6 +1,6 @@
 import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { colors } from "../../theme/colors.js";
+import { colors } from "../../theme/colors";
 
 export const iconGlyphMap = {
   home: "home-outline",

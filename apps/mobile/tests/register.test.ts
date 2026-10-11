@@ -75,4 +75,16 @@ describe("Register Schema & Password Requirements", () => {
       expect(res.error.issues[0].message).toContain("uppercase, lowercase, number, and special character");
     }
   });
+
+  it("rejects passwords longer than bcrypt's 72-byte limit", () => {
+    const password = `Aa1!${"a".repeat(69)}`;
+    const res = registerSchema.safeParse({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      password,
+      confirmPassword: password,
+    });
+
+    expect(res.success).toBe(false);
+  });
 });

@@ -1,5 +1,5 @@
-import { apiClient } from "./client.js";
-import { UserDto, ApiResponse } from "../types/api.js";
+import { apiClient } from "./client";
+import { UserDto, ApiResponse } from "../types/api";
 
 export async function getCurrentUser(): Promise<UserDto> {
   const response = await apiClient.get<ApiResponse<UserDto>>("/api/users/me");

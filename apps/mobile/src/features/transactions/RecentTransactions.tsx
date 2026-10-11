@@ -1,12 +1,12 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { TransactionDto } from "../../types/api.js";
-import { TransactionListItem } from "../../components/transactions/TransactionListItem.js";
-import { SectionHeader } from "../../components/layout/SectionHeader.js";
-import { Skeleton } from "../../components/feedback/Skeleton.js";
-import { ErrorState } from "../../components/feedback/RemoteStates.js";
-import { colors } from "../../theme/colors.js";
-import { radius, border, space } from "../../theme/spacing.js";
+import { TransactionDto } from "../../types/api";
+import { TransactionListItem } from "../../components/transactions/TransactionListItem";
+import { SectionHeader } from "../../components/layout/SectionHeader";
+import { Skeleton } from "../../components/feedback/Skeleton";
+import { ErrorState } from "../../components/feedback/RemoteStates";
+import { colors } from "../../theme/colors";
+import { radius, border, space } from "../../theme/spacing";
 
 export interface RecentTransactionsProps {
   transactions: TransactionDto[];

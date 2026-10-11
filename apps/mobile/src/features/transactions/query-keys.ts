@@ -1,5 +1,5 @@
-import { ListTransactionsParams } from "../../api/transactions.api.js";
-import { TransactionStatus } from "../../types/api.js";
+import { ListTransactionsParams } from "../../api/transactions.api";
+import { TransactionStatus } from "../../types/api";
 
 export const transactionsQueryKeys = {
   all: ["transactions"] as const,

@@ -9,10 +9,11 @@ import {
   TextStyle,
   View,
 } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space, radius } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppIcon, SemanticIconName } from "../layout/AppIcon.js";
+import { colors } from "../../theme/colors";
+import { space, radius } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppIcon, SemanticIconName } from "../layout/AppIcon";
+import { haptics } from "../../utils/haptics";
 
 export type ButtonVariant = "primary" | "secondary" | "success" | "danger" | "ghost";
 
@@ -65,6 +66,7 @@ export function AppButton({
 
   const handlePress = () => {
     if (!isInteractive || !onPress) return;
+    haptics.tap();
     onPress();
   };
 

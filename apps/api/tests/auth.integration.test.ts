@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import { createApp } from "../src/app.js";
@@ -90,6 +90,18 @@ describe("User Authentication & Profile API", () => {
       });
       expect(res3.status).toBe(422);
       expect(res3.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("rejects passwords that exceed bcrypt's 72-byte input limit", async () => {
+      const app = createApp();
+      const res = await request(app).post("/api/auth/register").send({
+        name: "Long Password User",
+        email: "long-password@example.com",
+        password: `${"a".repeat(72)}1`,
+      });
+
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
     });
   });
 
@@ -229,5 +241,63 @@ describe("User Authentication & Profile API", () => {
       expect(res.body.error.code).toBe("NOT_FOUND");
       expect(res.body.error.message).toBe("User not found");
     });
+  });
+
+  it("revokes only the current bearer token on logout", async () => {
+    const app = createApp();
+    const registered = await request(app).post("/api/auth/register").send({
+      name: "Logout User",
+      email: "logout@example.com",
+      password: "Password123!",
+    });
+    const firstToken = registered.body.data.accessToken as string;
+
+    const loggedOut = await request(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `Bearer ${firstToken}`);
+    expect(loggedOut.status).toBe(204);
+
+    const rejected = await request(app)
+      .get("/api/users/me")
+      .set("Authorization", `Bearer ${firstToken}`);
+    expect(rejected.status).toBe(401);
+
+    const login = await request(app).post("/api/auth/login").send({
+      email: "logout@example.com",
+      password: "Password123!",
+    });
+    const secondToken = login.body.data.accessToken as string;
+    expect(secondToken).not.toBe(firstToken);
+
+    const accepted = await request(app)
+      .get("/api/users/me")
+      .set("Authorization", `Bearer ${secondToken}`);
+    expect(accepted.status).toBe(200);
+  });
+
+  it("keeps logout successful if expired-token cleanup fails after revocation", async () => {
+    const app = createApp();
+    const registered = await request(app).post("/api/auth/register").send({
+      name: "Cleanup User",
+      email: "cleanup@example.com",
+      password: "Password123!",
+    });
+    const token = registered.body.data.accessToken as string;
+    const cleanup = vi.spyOn(prisma.revokedToken, "deleteMany").mockRejectedValueOnce(
+      new Error("cleanup unavailable")
+    );
+    try {
+      const loggedOut = await request(app)
+        .post("/api/auth/logout")
+        .set("Authorization", `Bearer ${token}`);
+      expect(loggedOut.status).toBe(204);
+
+      const rejected = await request(app)
+        .get("/api/users/me")
+        .set("Authorization", `Bearer ${token}`);
+      expect(rejected.status).toBe(401);
+    } finally {
+      cleanup.mockRestore();
+    }
   });
 });

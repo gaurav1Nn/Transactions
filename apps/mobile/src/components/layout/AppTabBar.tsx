@@ -7,12 +7,12 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppIcon, SemanticIconName } from "./AppIcon.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border, hit } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { AppIcon, SemanticIconName } from "./AppIcon";
+import { colors } from "../../theme/colors";
+import { space, radius, border, hit } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 interface TabConfig {
   name: string;
@@ -172,7 +172,6 @@ export function AppTabBar({
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    height: 64,
     flexDirection: "row",
     backgroundColor: colors.surface,
     borderTopWidth: border.card,
@@ -180,6 +179,9 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
+    // Keep tab content above the system navigation area; its inset is added
+    // separately by the container's bottom padding.
+    minHeight: 72,
     alignItems: "center",
     justifyContent: "space-between",
     paddingTop: 2,

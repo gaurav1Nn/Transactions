@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { getCurrentUser } from "../../api/users.api.js";
-import { useAuth } from "../../providers/AuthProvider.js";
-import { getApiErrorMessage } from "../../utils/api-error.js";
+import { getCurrentUser } from "../../api/users.api";
+import { useAuth } from "../../providers/AuthProvider";
+import { getApiErrorMessage } from "../../utils/api-error";
 
 export function useProfile() {
   const { user: authUser, setUser } = useAuth();

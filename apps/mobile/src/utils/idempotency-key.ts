@@ -6,3 +6,22 @@ export function generateIdempotencyKey(): string {
     return v.toString(16);
   });
 }
+
+export function getTransactionPayloadFingerprint({
+  amount,
+  currency,
+  description,
+}: {
+  amount: string;
+  currency: string;
+  description: string;
+}): string {
+  return JSON.stringify([amount.trim(), currency, description.trim()]);
+}
+
+export function shouldRotateIdempotencyKey(
+  previousFingerprint: string | null,
+  nextFingerprint: string
+): boolean {
+  return previousFingerprint !== null && previousFingerprint !== nextFingerprint;
+}

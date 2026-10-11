@@ -9,30 +9,33 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import * as Clipboard from "expo-clipboard";
+import { haptics } from "../../utils/haptics";
 import {
   useTransaction,
   useSimulateTransaction,
-} from "./transaction-hooks.js";
-import { ScreenContainer } from "../../components/layout/ScreenContainer.js";
-import { AppHeader } from "../../components/layout/AppHeader.js";
-import { MoneyText } from "../../components/transactions/MoneyText.js";
-import { StatusBadge } from "../../components/transactions/StatusBadge.js";
-import { StatusStepper } from "../../components/transactions/StatusStepper.js";
-import { DetailRow } from "../../components/transactions/DetailRow.js";
-import { AppButton } from "../../components/forms/AppButton.js";
-import { ConfirmDialog } from "../../components/transactions/ConfirmDialog.js";
-import { InlineNotice } from "../../components/feedback/InlineNotice.js";
-import { Skeleton } from "../../components/feedback/Skeleton.js";
-import { EmptyState, ErrorState } from "../../components/feedback/RemoteStates.js";
-import { AppIcon } from "../../components/layout/AppIcon.js";
-import { useToast } from "../../components/feedback/Toast.js";
+} from "./transaction-hooks";
+import { ScreenContainer } from "../../components/layout/ScreenContainer";
+import { AppHeader } from "../../components/layout/AppHeader";
+import { MoneyText } from "../../components/transactions/MoneyText";
+import { StatusBadge } from "../../components/transactions/StatusBadge";
+import { StatusStepper } from "../../components/transactions/StatusStepper";
+import { DetailRow } from "../../components/transactions/DetailRow";
+import { AppButton } from "../../components/forms/AppButton";
+import { ConfirmDialog } from "../../components/transactions/ConfirmDialog";
+import { InlineNotice } from "../../components/feedback/InlineNotice";
+import { Skeleton } from "../../components/feedback/Skeleton";
+import { EmptyState, ErrorState } from "../../components/feedback/RemoteStates";
+import { AppIcon } from "../../components/layout/AppIcon";
+import { useToast } from "../../components/feedback/Toast";
+import { getTransactionDetailsState } from "./transaction-details-state";
 import {
   formatFullDateTime,
   formatUtcDateTime,
-} from "../../utils/format-date.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border, hit } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+} from "../../utils/format-date";
+import { colors } from "../../theme/colors";
+import { space, radius, border, hit } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface TransactionDetailsProps {
   id: string;
@@ -55,6 +58,17 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
   const [confirmOutcome, setConfirmOutcome] = useState<"SUCCESS" | "FAILED" | null>(
     null
   );
+
+  const handleCopyId = async () => {
+    if (!tx?.transactionId) return;
+    try {
+      await Clipboard.setStringAsync(tx.transactionId);
+      haptics.success();
+      showToast("Transaction ID copied", "success");
+    } catch {
+      showToast("Couldn't copy the transaction ID.", "error");
+    }
+  };
 
   const handleShareId = async () => {
     if (!tx?.transactionId) return;
@@ -80,12 +94,18 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
       });
 
       setConfirmOutcome(null);
+      if (outcome === "SUCCESS") {
+        haptics.success();
+      } else {
+        haptics.error();
+      }
       showToast(
         outcome === "SUCCESS" ? "Marked as Success" : "Marked as Failed",
         outcome === "SUCCESS" ? "success" : "error"
       );
     } catch (err) {
       setConfirmOutcome(null);
+      haptics.error();
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         showToast("This transaction was already finalized.", "info");
         void refetch();
@@ -97,8 +117,14 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
 
   const is404 =
     axios.isAxiosError(error) && error.response?.status === 404;
+  const detailsState = getTransactionDetailsState({
+    isLoading,
+    isError,
+    isNotFound: is404,
+    hasTransaction: Boolean(tx),
+  });
 
-  if (isLoading && !tx) {
+  if (detailsState === "loading") {
     return (
       <ScreenContainer padded={false}>
         <AppHeader title="Transaction" showBack onBack={() => router.back()} />
@@ -111,7 +137,7 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
     );
   }
 
-  if (is404 || !tx) {
+  if (detailsState === "not-found") {
     return (
       <ScreenContainer padded={false}>
         <AppHeader title="Transaction" showBack onBack={() => router.back()} />
@@ -128,7 +154,7 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
     );
   }
 
-  if (isError && !tx) {
+  if (detailsState === "error") {
     return (
       <ScreenContainer padded={false}>
         <AppHeader title="Transaction" showBack onBack={() => router.back()} />
@@ -141,6 +167,10 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
         </View>
       </ScreenContainer>
     );
+  }
+
+  if (!tx) {
+    return <></>;
   }
 
   const isPending = tx.status === "PENDING";
@@ -197,14 +227,24 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
               value={tx.transactionId}
               mono
               trailingAction={
-                <TouchableOpacity
-                  onPress={handleShareId}
-                  hitSlop={hit.slop}
-                  accessibilityRole="button"
-                  accessibilityLabel="Share transaction ID"
-                >
-                  <AppIcon name="share" size={18} color={colors.primary} />
-                </TouchableOpacity>
+                <View style={styles.idActions}>
+                  <TouchableOpacity
+                    onPress={handleCopyId}
+                    hitSlop={hit.slop}
+                    accessibilityRole="button"
+                    accessibilityLabel="Copy transaction ID"
+                  >
+                    <AppIcon name="copy" size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleShareId}
+                    hitSlop={hit.slop}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share transaction ID"
+                  >
+                    <AppIcon name="share" size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
               }
             />
 
@@ -355,6 +395,11 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     marginBottom: space.lg,
     lineHeight: 20,
+  },
+  idActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
   },
   simButtonsRow: {
     gap: space.sm,

@@ -1,4 +1,4 @@
-import { colors } from "./colors.js";
+import { colors } from "./colors";
 
 export type ApiTransactionStatus = "PENDING" | "SUCCESS" | "FAILED";
 

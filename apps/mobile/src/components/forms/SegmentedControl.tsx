@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { radius, border } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { colors } from "../../theme/colors";
+import { radius, border } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface SegmentOption<T extends string> {
   value: T;

@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { Redirect } from "expo-router";
-import { useAuth } from "../src/providers/AuthProvider.js";
-import { colors } from "../src/theme/colors.js";
-import { typography } from "../src/theme/typography.js";
-import { space } from "../src/theme/spacing.js";
+import { useAuth } from "../src/providers/AuthProvider";
+import { colors } from "../src/theme/colors";
+import { typography } from "../src/theme/typography";
+import { space } from "../src/theme/spacing";
 
 export default function IndexRoute(): React.JSX.Element {
   const { status } = useAuth();

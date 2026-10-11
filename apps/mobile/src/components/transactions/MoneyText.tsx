@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { formatMoneyParts } from "../../utils/format-money.js";
-import { colors } from "../../theme/colors.js";
-import { typography } from "../../theme/typography.js";
-import { space } from "../../theme/spacing.js";
+import { formatMoneyParts } from "../../utils/format-money";
+import { colors } from "../../theme/colors";
+import { typography } from "../../theme/typography";
+import { space } from "../../theme/spacing";
 
 export interface MoneyTextProps {
   amount: string;

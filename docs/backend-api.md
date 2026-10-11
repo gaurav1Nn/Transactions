@@ -16,6 +16,7 @@ The ACE Digital Transactions backend is a secure, RESTful Express TypeScript ser
 - **Authentication:** JSON Web Tokens (JWT) using HMAC-SHA256.
 - **Authorization header:** `Authorization: Bearer <accessToken>`
 - **Token expiration:** 24 hours (configurable via `JWT_EXPIRES_IN`).
+- **Logout:** Revokes the presented access token on the server. A fresh login issues a distinct token.
 - **Password security:** bcrypt with salt rounds >= 10. Passwords are never returned in responses or logged.
 - **Ownership enforcement:** All transaction reads and writes are strictly scoped to the authenticated user ID extracted from the verified JWT.
 - **Security headers:** Helmet enabled (strict transport security, X-Frame-Options, X-Content-Type-Options: nosniff).
@@ -95,6 +96,18 @@ Operational health probe. Publicly accessible.
 
 ---
 
+### 4.1.1. Readiness Check
+
+Checks that the API can reach PostgreSQL. Publicly accessible. Use this for a deployment readiness probe; `/health` only confirms that the HTTP process is running.
+
+- **Method:** `GET`
+- **Path:** `/ready`
+- **Authentication:** None
+
+Returns `{ "data": { "status": "ready" } }` with `200`, or a structured `503 SERVICE_UNAVAILABLE` response when PostgreSQL cannot be reached.
+
+---
+
 ### 4.2. User Registration
 
 Registers a new user account.
@@ -117,7 +130,7 @@ Registers a new user account.
 |---|---|---|
 | `name` | string | Trimmed, 1–100 characters |
 | `email` | string | Valid email format, normalized to lowercase |
-| `password` | string | 8–128 characters, requires at least one uppercase letter, one lowercase letter, one number, and one special character |
+| `password` | string | 8–128 characters, at most 72 UTF-8 bytes, and requires at least one uppercase letter, one lowercase letter, one number, and one special character |
 
 #### Response (`201 Created`)
 
@@ -172,7 +185,18 @@ Authenticates existing user with email and password.
 
 ---
 
-### 4.4. Get Current User Profile
+### 4.4. Logout
+
+Revokes the bearer token used for this request. Subsequent requests with that token return `401 UNAUTHORIZED`.
+
+- **Method:** `POST`
+- **Path:** `/api/auth/logout`
+- **Authentication:** Bearer JWT required
+- **Response:** `204 No Content`
+
+---
+
+### 4.5. Get Current User Profile
 
 Retrieves the authenticated user's profile.
 
@@ -195,7 +219,7 @@ Retrieves the authenticated user's profile.
 
 ---
 
-### 4.5. Create Transaction
+### 4.6. Create Transaction
 
 Creates a new transaction in `PENDING` state. Duplicate submissions are protected by an `Idempotency-Key` header.
 
@@ -246,7 +270,7 @@ Creates a new transaction in `PENDING` state. Duplicate submissions are protecte
 
 ---
 
-### 4.6. List Transaction History
+### 4.7. List Transaction History
 
 Retrieves the authenticated user's transactions in descending chronological order (newest first).
 
@@ -258,8 +282,9 @@ Retrieves the authenticated user's transactions in descending chronological orde
 
 | Parameter | Type | Default | Constraints |
 |---|---|---|---|
-| `page` | integer | `1` | >= 1 |
+| `page` | integer | `1` | 1–100,000; legacy offset pagination |
 | `limit` | integer | `20` | 1–100 |
+| `cursor` | string | optional | Opaque cursor returned as `pagination.nextCursor`; use it for stable infinite scrolling |
 | `status` | string | optional | `"PENDING"`, `"SUCCESS"`, or `"FAILED"` |
 
 #### Response (`200 OK`)
@@ -285,7 +310,8 @@ Retrieves the authenticated user's transactions in descending chronological orde
       "page": 1,
       "limit": 20,
       "total": 1,
-      "totalPages": 1
+      "totalPages": 1,
+      "nextCursor": "eyJjcmVhdGVkQXQiOiIyMDI2LTEwLTEwVDExOjA1OjAwLjAwMFoiLCJpZCI6IjFhMmIzYzRkLTVlNmYtN2E4Yi05YzBkLTFlMmYzYTRiNWM2ZCJ9"
     }
   }
 }
@@ -293,7 +319,7 @@ Retrieves the authenticated user's transactions in descending chronological orde
 
 ---
 
-### 4.7. Get Transaction Details
+### 4.8. Get Transaction Details
 
 Retrieves details of a single transaction owned by the user.
 
@@ -326,7 +352,7 @@ The `:id` path parameter may be either the public `transactionId` (e.g. `TXN-MV1
 
 ---
 
-### 4.8. Simulate Payment Result
+### 4.9. Simulate Payment Result
 
 Simulates the mock payment transition of a `PENDING` transaction to either `SUCCESS` or `FAILED`.
 

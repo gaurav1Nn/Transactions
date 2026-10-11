@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useAuth } from "../../../src/providers/AuthProvider.js";
+import { useAuth } from "../../../src/providers/AuthProvider";
 import {
   useInfiniteTransactions,
   useStatusCounts,
-} from "../../../src/features/transactions/transaction-hooks.js";
-import { ScreenContainer } from "../../../src/components/layout/ScreenContainer.js";
-import { AppHeader } from "../../../src/components/layout/AppHeader.js";
-import { Avatar } from "../../../src/components/layout/Avatar.js";
-import { FilterChips, FilterValue } from "../../../src/components/transactions/FilterChips.js";
-import { SyncStatusPill } from "../../../src/components/feedback/SyncStatusPill.js";
-import { TransactionHistoryList } from "../../../src/features/transactions/TransactionHistoryList.js";
-import { Skeleton } from "../../../src/components/feedback/Skeleton.js";
-import { EmptyState, ErrorState } from "../../../src/components/feedback/RemoteStates.js";
-import { TransactionDto, TransactionStatus } from "../../../src/types/api.js";
-import { colors } from "../../../src/theme/colors.js";
-import { space, radius, border } from "../../../src/theme/spacing.js";
+} from "../../../src/features/transactions/transaction-hooks";
+import { ScreenContainer } from "../../../src/components/layout/ScreenContainer";
+import { AppHeader } from "../../../src/components/layout/AppHeader";
+import { Avatar } from "../../../src/components/layout/Avatar";
+import { FilterChips, FilterValue } from "../../../src/components/transactions/FilterChips";
+import { SyncStatusPill } from "../../../src/components/feedback/SyncStatusPill";
+import { TransactionHistoryList } from "../../../src/features/transactions/TransactionHistoryList";
+import { Skeleton } from "../../../src/components/feedback/Skeleton";
+import { EmptyState, ErrorState } from "../../../src/components/feedback/RemoteStates";
+import { TransactionDto, TransactionStatus } from "../../../src/types/api";
+import { colors } from "../../../src/theme/colors";
+import { space, radius, border } from "../../../src/theme/spacing";
 
 export default function TransactionsHistoryScreen(): React.JSX.Element {
   const router = useRouter();
@@ -51,6 +51,7 @@ export default function TransactionsHistoryScreen(): React.JSX.Element {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
     refetch,
     isRefetching,
     dataUpdatedAt,
@@ -153,11 +154,13 @@ export default function TransactionsHistoryScreen(): React.JSX.Element {
             transactions={items}
             onItemPress={handleItemPress}
             onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) {
+              if (hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
                 void fetchNextPage();
               }
             }}
             isFetchingNextPage={isFetchingNextPage}
+            isNextPageError={isFetchNextPageError}
+            onRetryNextPage={() => void fetchNextPage()}
             hasNextPage={Boolean(hasNextPage)}
             onRefresh={handleRefresh}
             refreshing={isRefetching}

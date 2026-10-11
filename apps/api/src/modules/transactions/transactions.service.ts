@@ -9,6 +9,10 @@ import {
 } from "./transactions.schemas.js";
 import { generateTransactionId } from "../../shared/transaction-id.js";
 import { AppError } from "../../shared/app-error.js";
+import {
+  decodeTransactionCursor,
+  encodeTransactionCursor,
+} from "./transaction-cursor.js";
 
 export { TransactionStatus };
 
@@ -32,6 +36,7 @@ export interface PaginatedTransactions {
     limit: number;
     total: number;
     totalPages: number;
+    nextCursor?: string;
   };
 }
 
@@ -117,13 +122,21 @@ export class TransactionsService {
   ): Promise<PaginatedTransactions> {
     const page = query.page;
     const limit = query.limit;
-    const skip = (page - 1) * limit;
+    const skip = query.cursor ? 0 : (page - 1) * limit;
+    const cursor = query.cursor ? decodeTransactionCursor(query.cursor) : undefined;
 
-    const [items, total] = await this.repo.findManyByUserId(userId, {
+    const [records, total] = await this.repo.findManyByUserId(userId, {
       skip,
       take: limit,
       status: query.status,
+      cursor,
     });
+
+    const items = records.slice(0, limit);
+    const nextCursor =
+      records.length > limit && items.length > 0
+        ? encodeTransactionCursor(items[items.length - 1])
+        : undefined;
 
     const totalPages = Math.ceil(total / limit) || (total === 0 ? 0 : 1);
 
@@ -134,6 +147,7 @@ export class TransactionsService {
         limit,
         total,
         totalPages,
+          ...(nextCursor ? { nextCursor } : {}),
       },
     };
   }

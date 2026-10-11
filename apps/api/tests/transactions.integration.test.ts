@@ -202,6 +202,30 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(count).toBe(1);
     });
 
+    it("treats whitespace around an idempotency key as the same key", async () => {
+      const app = createApp();
+      const payload = {
+        amount: "25.00",
+        currency: "USD",
+        description: "Whitespace key",
+      };
+
+      const first = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "  normalized-key  ")
+        .send(payload);
+      const replay = await request(app)
+        .post("/api/transactions")
+        .set("Authorization", `Bearer ${userToken}`)
+        .set("Idempotency-Key", "normalized-key")
+        .send(payload);
+
+      expect(first.status).toBe(201);
+      expect(replay.status).toBe(200);
+      expect(replay.body.data.id).toBe(first.body.data.id);
+    });
+
     it("replay with changed payload returns 409 Conflict", async () => {
       const app = createApp();
       const initialPayload = {
@@ -377,6 +401,11 @@ describe("Transactions API - Creation & Idempotency", () => {
         .get("/api/transactions?status=INVALID")
         .set("Authorization", `Bearer ${userToken}`);
       expect(res3.status).toBe(422);
+
+      const res4 = await request(app)
+        .get("/api/transactions?page=100001")
+        .set("Authorization", `Bearer ${userToken}`);
+      expect(res4.status).toBe(422);
     });
 
     it("filters history by status when provided", async () => {

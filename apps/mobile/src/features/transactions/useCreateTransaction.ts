@@ -1,12 +1,17 @@
 import { useState, useCallback, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "expo-router";
-import { createTransactionApi } from "../../api/transactions.api.js";
-import { CreateTransactionRequest, TransactionDto } from "../../types/api.js";
-import { generateIdempotencyKey } from "../../utils/idempotency-key.js";
-import { useInvalidateTransactions } from "./transaction-hooks.js";
-import { useToast } from "../../components/feedback/Toast.js";
-import { isApiErrorResponse } from "../../utils/api-error.js";
+import { createTransactionApi } from "../../api/transactions.api";
+import { CreateTransactionRequest, TransactionDto } from "../../types/api";
+import {
+  generateIdempotencyKey,
+  getTransactionPayloadFingerprint,
+  shouldRotateIdempotencyKey,
+} from "../../utils/idempotency-key";
+import { useInvalidateTransactions } from "./transaction-hooks";
+import { useToast } from "../../components/feedback/Toast";
+import { isApiErrorResponse } from "../../utils/api-error";
+import { haptics } from "../../utils/haptics";
 
 export function useCreateTransaction() {
   const [idempotencyKey, setIdempotencyKey] = useState<string>(
@@ -20,12 +25,17 @@ export function useCreateTransaction() {
   } | null>(null);
 
   const isSubmittingRef = useRef(false);
+  const idempotencyKeyRef = useRef(idempotencyKey);
+  const submittedPayloadFingerprintRef = useRef<string | null>(null);
   const router = useRouter();
   const invalidateTransactions = useInvalidateTransactions();
   const { showToast } = useToast();
 
   const resetIdempotencyKey = useCallback(() => {
-    setIdempotencyKey(generateIdempotencyKey());
+    const nextKey = generateIdempotencyKey();
+    idempotencyKeyRef.current = nextKey;
+    submittedPayloadFingerprintRef.current = null;
+    setIdempotencyKey(nextKey);
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
@@ -43,10 +53,27 @@ export function useCreateTransaction() {
       setIsLoading(true);
       setError(null);
 
+      const payloadFingerprint = getTransactionPayloadFingerprint(payload);
+      if (
+        shouldRotateIdempotencyKey(
+          submittedPayloadFingerprintRef.current,
+          payloadFingerprint
+        )
+      ) {
+        const nextKey = generateIdempotencyKey();
+        idempotencyKeyRef.current = nextKey;
+        setIdempotencyKey(nextKey);
+      }
+      submittedPayloadFingerprintRef.current = payloadFingerprint;
+
       try {
-        const result = await createTransactionApi(payload, idempotencyKey);
+        const result = await createTransactionApi(
+          payload,
+          idempotencyKeyRef.current
+        );
 
         await invalidateTransactions();
+        haptics.success();
         showToast("Transaction created successfully", "success");
 
         // Fresh key for subsequent submissions
@@ -56,6 +83,7 @@ export function useCreateTransaction() {
         router.replace(`/(app)/transactions/${result.transactionId}`);
         return result;
       } catch (err) {
+        haptics.error();
         if (axios.isAxiosError(err)) {
           if (err.response?.status === 409) {
             setError({
@@ -93,7 +121,6 @@ export function useCreateTransaction() {
       }
     },
     [
-      idempotencyKey,
       isLoading,
       invalidateTransactions,
       showToast,

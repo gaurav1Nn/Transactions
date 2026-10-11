@@ -7,9 +7,11 @@ import React, {
   useRef,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { UserDto } from "../types/api.js";
-import { tokenStorage } from "../storage/token-storage.js";
-import { setAccessTokenProvider, setUnauthorizedHandler } from "../api/client.js";
+import { UserDto } from "../types/api";
+import { tokenStorage } from "../storage/token-storage";
+import { setAccessTokenProvider, setUnauthorizedHandler } from "../api/client";
+import { logoutApi } from "../api/auth.api";
+import axios from "axios";
 
 export type AuthStatus = "restoring" | "authenticated" | "unauthenticated";
 
@@ -48,7 +50,7 @@ export function AuthProvider({
   // Keep tokenRef in sync with state
   tokenRef.current = token;
 
-  const signOut = useCallback(async () => {
+  const clearLocalSession = useCallback(async () => {
     await tokenStorage.clearSession();
     tokenRef.current = null;
     setToken(null);
@@ -56,6 +58,19 @@ export function AuthProvider({
     setStatus("unauthenticated");
     queryClient.clear();
   }, [queryClient]);
+
+  const signOut = useCallback(async () => {
+    if (tokenRef.current) {
+      try {
+        await logoutApi();
+      } catch (error) {
+        if (!axios.isAxiosError(error) || error.response?.status !== 401) {
+          throw error;
+        }
+      }
+    }
+    await clearLocalSession();
+  }, [clearLocalSession]);
 
   const signIn = useCallback(
     async (newToken: string, newUser: UserDto) => {
@@ -103,7 +118,7 @@ export function AuthProvider({
     // Configure API client to fetch the latest token from ref
     setAccessTokenProvider(() => tokenRef.current);
     setUnauthorizedHandler(() => {
-      void signOut();
+      void clearLocalSession();
     });
 
     // Run initial session restoration
@@ -113,7 +128,7 @@ export function AuthProvider({
       setAccessTokenProvider(null);
       setUnauthorizedHandler(null);
     };
-  }, [restoreSession, signOut]);
+  }, [restoreSession, clearLocalSession]);
 
   const value: AuthContextValue = {
     status,

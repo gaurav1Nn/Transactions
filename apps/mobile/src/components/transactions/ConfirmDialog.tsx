@@ -7,10 +7,10 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from "react-native";
-import { colors } from "../../theme/colors.js";
-import { space, radius, elevation } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
-import { AppButton, ButtonVariant } from "../forms/AppButton.js";
+import { colors } from "../../theme/colors";
+import { space, radius, elevation } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { AppButton, ButtonVariant } from "../forms/AppButton";
 
 export interface ConfirmDialogProps {
   visible: boolean;

@@ -12,11 +12,12 @@ import {
   addIntegerCents,
   amountToCents,
   MAX_AMOUNT_CENTS,
-} from "../../utils/money-input.js";
-import { CURRENCY_SYMBOLS } from "../../utils/format-money.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border, hit } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+} from "../../utils/money-input";
+import { CURRENCY_SYMBOLS } from "../../utils/format-money";
+import { colors } from "../../theme/colors";
+import { space, radius, border, hit } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+import { useRevealFocusedInput } from "../layout/ScreenContainer";
 
 export interface AmountInputProps {
   value: string;
@@ -24,6 +25,7 @@ export interface AmountInputProps {
   currency?: string;
   error?: string;
   disabled?: boolean;
+  onSubmitEditing?: () => void;
 }
 
 export function AmountInput({
@@ -32,8 +34,10 @@ export function AmountInput({
   currency = "USD",
   error,
   disabled = false,
+  onSubmitEditing,
 }: AmountInputProps): React.JSX.Element {
   const [isFocused, setIsFocused] = useState(false);
+  const revealFocusedInput = useRevealFocusedInput();
 
   const symbol = CURRENCY_SYMBOLS[currency] || `${currency} `;
   const currentCents = amountToCents(value);
@@ -81,11 +85,17 @@ export function AmountInput({
         <TextInput
           value={value}
           onChangeText={handleTextChange}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => {
+            setIsFocused(true);
+            revealFocusedInput?.();
+          }}
           onBlur={handleBlur}
           placeholder="0.00"
           placeholderTextColor={colors.inkMuted}
           keyboardType="decimal-pad"
+          returnKeyType={onSubmitEditing ? "next" : "done"}
+          submitBehavior={onSubmitEditing ? "submit" : "blurAndSubmit"}
+          onSubmitEditing={onSubmitEditing}
           editable={!disabled}
           style={[styles.textInput, typography.amountXL]}
           accessibilityLabel="Transfer amount"

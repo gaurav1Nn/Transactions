@@ -109,4 +109,5 @@ Perform the complete verification workflow on the installed APK:
 - [ ] **7. Profile & Session Restoration:**
   - View identity card, avatar initials, and formatted "Member since" date.
   - Restart app: session restores automatically from `SecureStore`.
-  - Tap "Log out": prompts confirmation, deletes session, redirects to Login.
+  - Tap "Log out": prompts confirmation, revokes the token on the server, deletes the local session, and redirects to Login.
+  - Reuse the old token against `/api/users/me`: it returns `401`. A fresh login still works.

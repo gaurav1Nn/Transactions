@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { createTransactionSchema } from "../src/features/transactions/create-transaction.schema.js";
-import { generateIdempotencyKey } from "../src/utils/idempotency-key.js";
+import {
+  generateIdempotencyKey,
+  getTransactionPayloadFingerprint,
+  shouldRotateIdempotencyKey,
+} from "../src/utils/idempotency-key.js";
 
 describe("Create Transaction Schema & Idempotency Key", () => {
   it("generates valid UUID v4 idempotency keys", () => {
@@ -45,5 +49,21 @@ describe("Create Transaction Schema & Idempotency Key", () => {
       description: "A".repeat(256),
     });
     expect(oversized.success).toBe(false);
+  });
+
+  it("keeps a retry key for the same payload and rotates it for an edited payload", () => {
+    const original = getTransactionPayloadFingerprint({
+      amount: "10.00",
+      currency: "USD",
+      description: "First attempt",
+    });
+    const edited = getTransactionPayloadFingerprint({
+      amount: "12.00",
+      currency: "USD",
+      description: "First attempt",
+    });
+
+    expect(shouldRotateIdempotencyKey(original, original)).toBe(false);
+    expect(shouldRotateIdempotencyKey(original, edited)).toBe(true);
   });
 });

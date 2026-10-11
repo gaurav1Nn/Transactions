@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { ApiTransactionStatus, statusTheme } from "../../theme/status.js";
-import { AppIcon } from "../layout/AppIcon.js";
-import { space, radius, border } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { ApiTransactionStatus, statusTheme } from "../../theme/status";
+import { AppIcon } from "../layout/AppIcon";
+import { space, radius, border } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface StatTileProps {
   status: ApiTransactionStatus;

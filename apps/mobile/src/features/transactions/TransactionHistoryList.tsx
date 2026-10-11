@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { TransactionDto } from "../../types/api.js";
-import { TransactionListItem } from "../../components/transactions/TransactionListItem.js";
-import { colors } from "../../theme/colors.js";
-import { space, radius, border } from "../../theme/spacing.js";
-import { typography } from "../../theme/typography.js";
+import { TransactionDto } from "../../types/api";
+import { TransactionListItem } from "../../components/transactions/TransactionListItem";
+import { colors } from "../../theme/colors";
+import { space, radius, border } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export interface TransactionDateSection {
   title: string;

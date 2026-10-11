@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../shared/jwt.js";
 import { AppError } from "../shared/app-error.js";
+import { isTokenRevoked } from "../shared/token-revocation.js";
 
-export function authenticate(
+export async function authenticate(
   req: Request,
   _res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -18,6 +19,9 @@ export function authenticate(
 
   try {
     const payload = verifyAccessToken(token);
+    if (await isTokenRevoked(token)) {
+      throw new AppError("UNAUTHORIZED", "Invalid or expired token", 401);
+    }
     req.user = { id: payload.sub };
     next();
   } catch (error) {
