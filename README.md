@@ -140,7 +140,9 @@ docker build -f apps/api/Dockerfile -t ace-transactions-api .
 # then `gcloud run deploy ace-transactions-api ... --set-secrets=...`
 ```
 
-**Production API URL:** `<add the deployed Cloud Run URL here>`
+**Production API URL:** https://ace-api-326519691217.asia-south1.run.app
+
+Health check: [`/health`](https://ace-api-326519691217.asia-south1.run.app/health) returns `{"data":{"status":"ok"}}`.
 
 ## Building the Android APK
 
