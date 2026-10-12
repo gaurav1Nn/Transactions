@@ -34,7 +34,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     "expo-secure-store",
-    ["expo-splash-screen", { backgroundColor: "#172041", resizeMode: "contain" }],
+    [
+      "expo-splash-screen",
+      {
+        image: "./assets/splash-icon.png",
+        imageWidth: 200,
+        backgroundColor: "#172041",
+        resizeMode: "contain",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
