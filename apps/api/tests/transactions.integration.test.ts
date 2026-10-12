@@ -470,6 +470,53 @@ describe("Transactions API - Creation & Idempotency", () => {
       expect(res.body.data.pagination.total).toBe(1);
       expect(res.body.data.pagination.totalPages).toBe(1);
     });
+
+    it("cursor pages return every transaction exactly once, newest first, including same-timestamp ties", async () => {
+      const app = createApp();
+      const base = Date.UTC(2026, 9, 12, 12, 0, 0);
+      // 45 rows over 3 pages of 20; every third row shares a timestamp with its neighbour,
+      // so ties straddle page boundaries and rely on the id tie-breaker.
+      await prisma.transaction.createMany({
+        data: Array.from({ length: 45 }, (_, i) => ({
+          transactionId: `TXN-PAGE-${String(i).padStart(3, "0")}`,
+          userId,
+          idempotencyKey: `page-key-${i}`,
+          amount: "1.00",
+          currency: "USD",
+          description: `Row ${i}`,
+          status: (["PENDING", "SUCCESS", "FAILED"] as const)[i % 3],
+          createdAt: new Date(base + Math.floor(i / 3) * 2 * 1000 + (i % 3 === 2 ? 0 : (i % 3) * 7)),
+        })),
+      });
+      const expected = await prisma.transaction.findMany({
+        where: { userId },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: { transactionId: true, status: true },
+      });
+
+      const walk = async (status?: string) => {
+        const seen: string[] = [];
+        let cursor: string | undefined;
+        for (let guard = 0; guard < 10; guard++) {
+          const res = await request(app)
+            .get("/api/transactions")
+            .query({ limit: 20, ...(status ? { status } : {}), ...(cursor ? { cursor } : {}) })
+            .set("Authorization", `Bearer ${userToken}`);
+          expect(res.status).toBe(200);
+          seen.push(...res.body.data.items.map((t: { transactionId: string }) => t.transactionId));
+          cursor = res.body.data.pagination.nextCursor;
+          if (!cursor) break;
+        }
+        return seen;
+      };
+
+      expect(await walk()).toEqual(expected.map((t) => t.transactionId));
+      for (const status of ["PENDING", "SUCCESS", "FAILED"]) {
+        expect(await walk(status)).toEqual(
+          expected.filter((t) => t.status === status).map((t) => t.transactionId)
+        );
+      }
+    });
   });
 
   describe("GET /api/transactions/:id - Details & Ownership", () => {
