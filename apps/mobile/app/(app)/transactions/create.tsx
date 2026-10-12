@@ -132,11 +132,19 @@ export default function CreateTransactionScreen(): React.JSX.Element {
     clearError();
     if (!validateForm()) return;
 
-    await createTransaction({
+    const created = await createTransaction({
       amount: amount.trim(),
       currency,
       description: description.trim(),
     });
+
+    // This tab stays mounted after navigating away, so clear the form for the next transaction.
+    if (created) {
+      setAmount("");
+      setDescription("");
+      setCurrency("USD");
+      setFieldErrors({});
+    }
   };
 
   const isAmountValid =
