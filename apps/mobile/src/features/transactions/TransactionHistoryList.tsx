@@ -214,6 +214,8 @@ export function TransactionHistoryList({
       onEndReached={onEndReached}
       onEndReachedThreshold={0.4}
       stickySectionHeadersEnabled={true}
+      // Android defaults this to true, which blanks the first row under a sticky header.
+      removeClippedSubviews={false}
       contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={false}
       onRefresh={onRefresh}
