@@ -37,6 +37,8 @@ import { colors } from "../../theme/colors";
 import { space, radius, border, hit } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 
+const AUTO_RETURN_SECONDS = 5;
+
 export interface TransactionDetailsProps {
   id: string;
 }
@@ -58,15 +60,28 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
 
   const simulateMutation = useSimulateTransaction();
 
+  const shouldAutoReturn =
+    autoReturnHome === "true" &&
+    (tx?.status === "SUCCESS" || tx?.status === "FAILED");
+  const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
+
   useEffect(() => {
-    if (autoReturnHome !== "true" || tx?.status !== "SUCCESS") return;
+    if (!shouldAutoReturn) {
+      setRedirectSeconds(null);
+      return;
+    }
 
-    const timeout = setTimeout(() => {
-      router.replace("/(app)");
-    }, 5000);
+    setRedirectSeconds(AUTO_RETURN_SECONDS);
+    const interval = setInterval(() => {
+      setRedirectSeconds((s) => (s === null ? null : Math.max(s - 1, 0)));
+    }, 1000);
 
-    return () => clearTimeout(timeout);
-  }, [autoReturnHome, router, tx?.status]);
+    return () => clearInterval(interval);
+  }, [shouldAutoReturn]);
+
+  useEffect(() => {
+    if (redirectSeconds === 0) router.replace("/(app)");
+  }, [redirectSeconds, router]);
 
   const [confirmOutcome, setConfirmOutcome] = useState<"SUCCESS" | "FAILED" | null>(
     null
@@ -321,6 +336,16 @@ export function TransactionDetails({ id }: TransactionDetailsProps): React.JSX.E
               message={`Outcome recorded on ${processedFormatted}. Final transactions cannot be changed.`}
             />
           )}
+
+          {redirectSeconds !== null && redirectSeconds > 0 && (
+            <Text
+              style={[styles.redirectText, typography.bodySm]}
+              accessibilityLiveRegion="polite"
+            >
+              Redirecting to home in {redirectSeconds}{" "}
+              {redirectSeconds === 1 ? "second" : "seconds"}…
+            </Text>
+          )}
         </View>
       </ScrollView>
 
@@ -416,5 +441,9 @@ const styles = StyleSheet.create({
   },
   simButtonsRow: {
     gap: space.sm,
+  },
+  redirectText: {
+    color: colors.inkSoft,
+    textAlign: "center",
   },
 });
